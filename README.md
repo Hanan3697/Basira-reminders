@@ -1,16 +1,20 @@
 # بصيرة — Basira
 
-Repository for preparing the Basira application migration to Cloudflare.
+Cloudflare migration staging source. **Not yet the replacement public application.**
 
-## Status
+The Quran text, font, reader, reflections, prayers, backgrounds and reading settings are preserved from the original application. Unused historical calendar/image exports are excluded; all referenced assets are included.
 
-Not ready for deployment. Application files and Cloudflare configuration still need to be prepared and tested.
+## Setup before public cutover
 
-Before publishing:
-- Preserve the Quran reader, reflections, prayers, design, and reading settings.
-- Migrate cumulative analytics without resetting totals.
-- Replace hosting-specific administrator authentication with verified authentication on Cloudflare.
-- Verify statistics remain private.
-- Test the new address before replacing shared links.
+1. Connect this repository to a Cloudflare Worker named `basira`. Build: `npm run build`; deploy: `npx wrangler deploy`. Turn preview builds off until a separate test database is configured.
+2. Create a D1 database. Add binding `DB` with its real database ID to `wrangler.jsonc` and `migrations_dir: "drizzle"`. Apply the two SQL migrations to the NEW database only.
+3. Set up Cloudflare Access for both `/statistics` and `/api/analytics/stats`, allowing only the owner's verified email. Use the same Access application/audience for both paths. Set Worker variables `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`, `ADMIN_EMAIL`. The Worker cryptographically verifies Access assertions and rejects unsigned or forged identities; missing settings fail closed.
+4. Transfer the old analytics data privately at cutover. Never commit database exports, visitor identifiers or credentials to this public repository. Old statistics remain on the original Site until migration is verified. Do not start public analytics with a fresh database and claim historic totals have transferred.
+5. Provide an explicit browser reading-progress transfer before redirecting users. Browser storage does not automatically transfer between domains. Keep the old application live meanwhile.
+6. Test reading, saved position, the standalone basmala, navigation, reflections, manifest and private statistics on the new domain. Verify historic totals against the old dashboard, then share the new URL.
 
-Browser reading progress is origin-bound and needs an explicit transfer path. Background push notifications require separate setup.
+No Cloudflare deployment or data transfer has been performed by adding this source. Background push still requires a separate notification service; this migration does not activate it.
+
+## Local checks
+
+Node 22+: `npm test` and `npm run build`. Use Wrangler dry-run before deployment. No paid services or billing changes are configured by these files.

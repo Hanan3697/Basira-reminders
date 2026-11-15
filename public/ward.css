@@ -1,0 +1,344 @@
+
+*{box-sizing:border-box}body{margin:0;background:#f5f2e9;color:#233e37;font-family:system-ui,-apple-system,sans-serif}header{padding:22px 6%;border-bottom:1px solid #ddd9cb;display:flex;align-items:center;justify-content:space-between}.brand{font-family:serif;font-size:34px}header span{font-size:12px;color:#6f7c73}main{max-width:760px;margin:auto;padding:28px 20px 130px}.eyebrow{color:#8b7955;font-size:12px;letter-spacing:1px}h1{font-size:32px;font-weight:500;margin:12px 0}p{line-height:1.9}.lead{color:#69766d;font-size:14px}.card{background:#fffdf7;border:1px solid #e4dfd0;border-radius:22px;padding:24px;margin:24px 0;box-shadow:0 8px 32px #254c4305}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}progress::-webkit-progress-bar{background:#e6e9dd;border-radius:20px}progress::-webkit-progress-value{background:#365f50;border-radius:20px}progress{appearance:none;width:100%;height:9px;accent-color:#365f50;border:0;margin:18px 0}.small{font-size:13px;color:#738076}button,.button{border:0;border-radius:12px;padding:14px 18px;cursor:pointer;font:inherit;background:#244c43;color:white;text-decoration:none;display:inline-block}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #c69a4f;outline-offset:3px}.secondary{background:#eaeade;color:#294b40}.quran{font-family:'Traditional Arabic','Amiri','Noto Naskh Arabic',serif;font-size:30px;line-height:2.5;text-align:justify;direction:rtl}.verse{display:inline}.num{display:inline-block;color:#8a7856;font-size:18px;padding:0 7px}.readinghead{text-align:center;border-bottom:1px solid #e6e0d1;padding-bottom:20px;margin-bottom:20px}.readinghead h2{font-family:serif;font-size:28px;margin:8px}.readinghead p{font-family:serif;font-size:24px;margin-bottom:0}.dock{position:sticky;bottom:12px;display:flex;gap:8px;padding:12px;background:#f5f2e9ee;border:1px solid #dedacd;border-radius:18px;backdrop-filter:blur(10px)}.dock button:first-child{flex:1}details{margin:20px 0}summary{cursor:pointer;padding:12px 0}label{display:block;margin:15px 0 8px}input,select{padding:12px;border:1px solid #d6d7ca;background:white;border-radius:10px;font:inherit;width:100%}.settings{display:grid;grid-template-columns:1fr 1fr;gap:15px}a{color:#315f50}#notice{font-size:14px;line-height:1.8}footer{text-align:center;font-size:12px;color:#7b8177;margin:35px 0}#done{display:none;text-align:center;padding:35px 0}.badge{background:#eaf0e6;border-radius:100px;padding:6px 12px;font-size:12px}@media(max-width:480px){main{padding:20px 16px 60px}.card{padding:20px}.quran{font-size:28px}h1{font-size:28px}.dock{bottom:8px}}
+@media(display-mode:standalone){#installCard{display:none}header{padding-top:max(22px,env(safe-area-inset-top))}.dock{bottom:max(12px,env(safe-area-inset-bottom))}}
+.mushafViewport{overflow-x:auto;direction:rtl;background:white;border-radius:6px}.mushafPage{display:block;max-width:none;height:auto}.quran{line-height:normal;text-align:right}#reader{padding:12px}.readinghead{padding-bottom:12px}
+.message-verse{margin:12px 0 18px;text-align:start;font-size:clamp(1.45rem,4vw,1.85rem);line-height:2.25}.reflection{border-inline-start:3px solid #b9a579;padding-inline-start:14px}.reflection p{margin:.35rem 0 0}
+.home {min-height:100svh;display:grid;place-content:center;justify-items:center;padding:28px 18px;max-width:none;background:#9ea99a url("/waterfall.webp") center center / cover no-repeat}
+.home h1 {font:normal clamp(44px,8vw,64px) serif;margin:0 0 30px;color:#153b31;text-shadow:0 1px 8px #fff9e6}
+.choices {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:min(92vw,520px)}
+.choice {display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;padding:26px 10px;background:rgba(255,250,239,.93);border:1px solid #e7dfca;border-radius:24px;box-shadow:0 6px 18px #244c430a;text-decoration:none;color:#244c43;font-weight:600;text-align:center;line-height:1.7}
+.choice:active {background:#ecebdf}
+.symbol {width:72px;height:72px;border-radius:19px;display:grid;place-items:center;background:#9c615d;color:#fff9ea}
+.envelope {width:40px;height:29px;position:relative;overflow:hidden;border:2px solid #fff9ea;border-radius:4px}
+.envelope::before {content:'';position:absolute;width:29px;height:29px;left:3px;top:-18px;transform:rotate(45deg);border:2px solid #fff9ea;border-radius:3px}
+.back {text-decoration:none;font-weight:600;padding:8px 0}
+
+/* Keep the two entry points directly on the landscape. */
+.home {
+  background-image: linear-gradient(180deg, transparent 10%, rgba(15,29,23,.55) 45%, rgba(15,29,23,.65) 60%, transparent 88%), url('/waterfall.webp');
+}
+.home .choice, .home .choice:active {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: white;
+  font-size: clamp(1.1rem, 4.4vw, 1.4rem);
+  text-shadow: 0 2px 6px #15231e;
+}
+.nature { isolation:isolate; min-height:100svh; font-size:1.15rem; }
+.nature::before {
+  content:''; position:fixed; inset:0; z-index:-1;
+  background:linear-gradient(rgba(13,31,24,.44),rgba(13,31,24,.55)),var(--scene) center / cover no-repeat;
+}
+.reader-scene { --scene:url('/reader-lantern.webp'); }
+.message-scene { --scene:url('/nature-0.webp'); }
+.nature header {background:rgba(18,39,32,.82);color:white;}
+.nature header a, .nature main > h1 {color:white;}
+.nature .card {background:rgba(255,253,246,.95);color:#20372e;}
+.nature .small, .nature .eyebrow {font-size:1rem;color:#43564c;}
+.nature .message-verse {font-size:clamp(1.9rem,6.7vw,2.5rem);line-height:2.05;color:#182e24;}
+.nature .reflection {font-size:1.23rem;}
+.nature #notice:not(:empty) {background:#fffdf6;color:#233b30;padding:12px;border-radius:12px;}
+.reader-scene main {max-width:900px;padding-inline:clamp(8px,2vw,18px);}
+.reader-scene #reader {padding-inline:6px;}
+
+.home .fur-icon {
+  width:clamp(88px,24vw,130px);
+  height:auto;
+  aspect-ratio:1;
+  filter:drop-shadow(0 5px 8px #182a235e);
+}
+.nature {display:flex;flex-direction:column;height:100vh;height:100dvh;min-height:0;overflow:hidden;}
+.nature main {width:100%;flex:1;min-height:0;overflow-y:auto;padding-bottom:12px;}
+.bottom-nav {
+  flex:none;
+  display:flex;justify-content:center;
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+  background:#1d332cf0;
+}
+.bottom-nav a {
+  display:block;text-align:center;width:min(100%,440px);
+  background:#fff8e9;color:#263e32;border-radius:14px;
+  padding:10px 16px;text-decoration:none;font-weight:700;font-size:1.08rem;
+}
+.reader-scene .dock {position:static;}
+.message-scene .card {
+  padding:0;background:transparent;border:0;box-shadow:none;
+}
+.message-scene #message-result {display:grid;gap:20px;margin-top:18px;}
+.message-scene .verse-panel,.message-scene .reflection {
+  border:1px solid #f7ebd6;border-radius:22px;
+  padding:clamp(20px,5vw,34px);
+  box-shadow:inset 0 2px 5px #fff8,0 5px 15px #20190933;
+  color:#312519;
+}
+.message-scene .verse-panel {
+  background:#efdfc4 linear-gradient(#fff6,#fff6);
+  background-image:linear-gradient(#fff7,#fff7),url('/plush-2.webp');
+  background-size:cover;
+}
+.message-scene .reflection {
+  background:#efd5c9;
+  background-image:linear-gradient(#fff8,#fff8),url('/plush-3.webp');
+  background-size:cover;
+}
+.message-scene .verse-panel .small,.message-scene .message-verse {color:#34281f;}
+.message-scene .verse-panel .small {margin-top:0;}
+
+/* Tint the original buttons while retaining the shading of their fur. */
+.home .choice[href="/message.html"] .fur-icon {
+  filter: sepia(.25) saturate(.63) brightness(.93) drop-shadow(0 5px 8px #182a235e);
+}
+.home .choice[href="/reader.html"] .fur-icon {
+  filter: hue-rotate(44deg) saturate(.44) brightness(.95) drop-shadow(0 5px 8px #182a235e);
+}
+.message-scene .verse-panel, .message-scene .reflection {
+  position:relative;
+  isolation:isolate;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  padding:clamp(28px,8vw,46px);
+  color:#251e18;
+}
+.message-scene .verse-panel::before, .message-scene .reflection::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  border:20px solid transparent;
+  border-image:var(--plush-panel) 75 fill / 20px / 0 stretch;
+  filter:drop-shadow(0 4px 5px #182a2355);
+  pointer-events:none;
+}
+.message-scene .verse-panel {--plush-panel:url('/fur-panel-0.webp');}
+.message-scene .reflection {--plush-panel:url('/fur-panel-1.webp');}
+.message-scene .verse-panel .small,.message-scene .verse-panel .message-verse {color:#251e18;}
+
+.fa-back{--glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M4%2012h16m-6-6%206%206-6%206%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");}
+.fa-time{--glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%204a8%208%200%201%200%20.1%200M12%207v5l3%202%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");}
+.fa-save{--glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m4%2012%205%205L20%206%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");}
+.fa-undo{--glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M8%205%203%2010l5%205M4%2010h10a6%206%200%200%201%206%206%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");}
+.fa-plus{--glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%205v14M5%2012h14%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");}
+.fa-minus{--glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M5%2012h14%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");}
+.fa-reset{--glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M4%2010a8%208%200%201%201%200%205M4%204v6h6%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");}
+.fa-calendar{--glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M4%206h16v14H4zM8%203v6m8-6v6M4%2011h16%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");}
+.fa-download{--glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%203v12m-5-5%205%205%205-5M4%2017v4h16v-4%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");}
+.fa-book{--glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%206Q7%203%203%205v13q5-2%209%201%204-3%209-1V5q-5-2-9%201v13%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");}
+.fa-info{--glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%203a9%209%200%201%200%20.1%200M12%2011v5m0-9v.2%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");}
+.fa-message{--glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M3%205h18v14H3zM3%206l9%207%209-7%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");}
+.fa-remove{--glyph:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M6%206l12%2012M6%2018%2018%206%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");}
+.message-scene::before {background:#e5e3d4 url('/message-lantern.webp') center / cover no-repeat;}
+.message-scene main {text-align:center;max-width:720px;padding-top:clamp(55px,13svh,135px);}
+.message-scene main>h1,.message-scene .verse-panel .small,.message-scene .verse-panel .message-verse,.message-scene .reflection {color:#182e39;}
+.message-scene .verse-panel::before,.message-scene .reflection::before {content:none;}
+.message-scene .verse-panel,.message-scene .reflection {padding:8px clamp(10px,3vw,24px);text-align:center;}
+.message-scene .message-verse {text-align:center;line-height:2.1;}
+.message-scene .reflection {margin:0 auto;max-width:36rem;}
+.message-scene .verse-panel::after {content:"❧";display:block;color:#365061;margin:10px auto 0;}
+.reader-scene::before {background:var(--scene) center / cover no-repeat;}
+.reader-scene #reader {background:transparent;border:none;box-shadow:none;}
+.reader-scene #reader .readinghead,.reader-scene #reader .row,.reader-scene #reader figcaption,.reader-scene #reader>p {background:#f4f3e8eb;color:#172d33;padding:8px;border-radius:10px;}
+.reader-scene .mushafViewport {background:transparent;padding:4px 0;}
+.reader-scene .mushafPage {filter:drop-shadow(0 0 1px #fff8e9) drop-shadow(0 0 2px #fff8e9);}
+.reader-scene main>h1 {text-shadow:0 2px 5px #152822;}
+.nature .fur-action {display:inline-grid;place-items:center;width:40px;height:40px;vertical-align:middle;flex:none;margin-inline-end:7px;border-radius:50%;background:#d9ceb6 url('/plush-2.webp') center / cover;box-shadow:inset 0 -2px 4px #59462650,0 2px 4px #18251a33;}
+.fur-action::after {content:"";width:52%;height:52%;background:#493523;-webkit-mask:var(--glyph) center / contain no-repeat;mask:var(--glyph) center / contain no-repeat;}
+.nature button,.nature .bottom-nav a {background:#f4efe4;color:#2b392f;border:1px solid #cabea9;font-weight:600;padding:5px 10px;}
+.nature button:disabled {opacity:.65;}
+.nature .bottom-nav {background:transparent;pointer-events:none;}
+.nature .bottom-nav a {pointer-events:auto;width:auto;min-width:160px;}
+.nature #smaller,.nature #larger {border:0;background:none;padding:2px;}
+.nature #smaller .fur-action,.nature #larger .fur-action {margin:0;}
+.message-scene #draw-message {font-size:1rem;}
+.reader-scene .dock {gap:4px;flex-wrap:wrap;}
+.reader-scene .dock button {font-size:.95rem;}
+
+.message-scene main>h1,.message-scene .verse-panel,.message-scene .reflection {text-shadow:0 0 3px #fff8ed,0 0 7px #fff8ed;}
+
+@font-face {
+  font-family: 'Ward Mushaf';
+  src: url('/AmiriQuran.ttf') format('truetype');
+  font-display: swap;
+}
+.reader-scene .mushaf-text {
+  font-family: 'Ward Mushaf', serif;
+  font-weight:700;
+  margin: .45em 0 .9em;
+  padding-inline: .22em;
+  text-align: center;
+  line-height: 2.35;
+  color: #16130e;
+  text-shadow: 1px 0 #fffdf4, -1px 0 #fffdf4, 0 1px #fffdf4, 0 -1px #fffdf4;
+}
+.verse-number {
+  display: inline-block;
+  font: 600 .52em/1.6 system-ui;
+  min-width: 1.65em;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  vertical-align: .13em;
+  padding-inline: .14em;
+}
+.message-scene .verse-panel .message-verse,
+.message-scene .reflection,
+.message-scene .verse-panel .small {
+  font-weight: 700;
+  color: #192922;
+  text-shadow: 1px 0 white, -1px 0 white, 0 1px white, 0 -1px white, 0 0 4px white;
+}
+.home .choice {padding-inline: 0;}
+.home .choice > span:last-child {white-space: nowrap; font-size: clamp(.88rem, 3.75vw, 1.25rem);}
+@media(max-width:350px) {
+  .home .choices {grid-template-columns: 1fr; gap: 8px;}
+  .home .choice {padding-block: 8px;}
+}
+
+.home .dua-choice {grid-column:1 / -1;justify-self:center;}
+.home .dua-icon {display:grid;place-items:center;width:clamp(88px,24vw,130px);aspect-ratio:1;border-radius:50%;background:#ddd2b5 url('/plush-2.webp') center / cover;box-shadow:inset 0 -4px 10px #493b2655,0 5px 10px #182a235e;font:normal clamp(34px,9.4vw,51px)/1 "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;}
+.dua-scene {--scene:url('/waterfall.webp');}
+.dua-panel {padding:clamp(16px,4vw,30px);background:transparent;color:#fffdf6;font-weight:700;text-shadow:0 1px 2px #181b14,0 0 5px #16180f;}
+.dua-panel h1 {font-family:serif;font-weight:700;}
+.dua-panel a,.dua-panel .small,.dua-panel .dua small,.dua-panel .dua blockquote {color:inherit;}
+.dua-filters {display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:12px;}
+.dua-filters label {font-size:1rem;font-weight:650;}
+.dua-filters select {display:block;width:100%;margin-top:5px;padding:10px;background:#fffdf7;color:#253c31;font:inherit;border:1px solid #a8afa1;border-radius:9px;}
+.dua {margin:0;padding:15px 0;border-top:1px solid #c8c8b8;}
+.dua summary {cursor:pointer;}
+.dua small {display:block;color:#596556;margin-top:4px;}
+.dua blockquote {margin:15px 0;color:#172c21;font:700 clamp(1.55rem,5vw,2rem)/2.2 'Ward Mushaf',serif;}
+.dua blockquote span {font-size:.55em;}
+#matches {font-size:.9rem;}
+
+
+.dua-view {margin:18px 0;padding:10px 14px;border:1px solid #abae99;border-radius:12px;}
+.dua-view label {display:inline-block;padding:7px 4px;cursor:pointer;}
+.dua-view input {accent-color:#30513c;width:auto;}
+
+.reader-scene #resumeWard[hidden] {display:none;}
+.reader-scene .page-navigation {margin-block:8px;}
+.reader-scene .page-navigation button {font:600 1rem system-ui;padding:8px 12px;}
+
+.home .dua-choice {grid-column:auto;justify-self:stretch;}
+.home .laws-icon {font-family:serif;color:#593d23;text-shadow:0 1px #f9eed9;}
+.law-content {max-width:46rem;color:#fffdf5;text-shadow:0 1px 4px #13261d;}
+.law-content h1 {font-family:serif;color:inherit;}
+.law-list {display:grid;gap:10px;}
+.law-link,.law-content article {display:block;background:rgba(25,45,36,.86);border:1px solid #d8d4bc65;border-radius:16px;padding:16px 20px;color:#fffdf5;}
+.law-link {text-decoration:none;}
+.law-link small {display:block;color:#efe4c6;}
+.law-link:focus-visible,.law-link:hover {outline:2px solid #e3d4a8;}
+.law-content article {margin-block:14px;}
+.law-content h2 {font-size:1rem;}
+.law-content h2 a {color:#f4e6be;}
+.law-verse {font:700 clamp(1.48rem,5vw,2rem)/2.1 'Ward Mushaf',serif;margin-block:12px;}
+.law-verse small {font-size:.7em;}
+.law-content dl {border-top:1px solid #ded4bc70;margin-bottom:0;}
+.law-content dt {font-weight:bold;color:#f2e2b6;margin-top:.7rem;}
+.law-content dd {margin:0;line-height:1.75;}
+
+/* The upper images include transparent margins around the fur. */
+.home .dua-icon {
+  width:clamp(75px,20.5vw,111px);
+  margin-block:clamp(6.5px,1.75vw,9.5px);
+  background-image:linear-gradient(#93613d66,#93613d66),url('/plush-2.webp');
+}
+.home .laws-icon {
+  background-image:linear-gradient(#63887388,#63887388),url('/plush-2.webp');
+}
+.law-verse {
+  direction:rtl;
+  text-align:start;
+  font-weight:400;
+  font-synthesis:none;
+  letter-spacing:normal;
+  word-spacing:normal;
+  word-break:normal;
+  overflow-wrap:normal;
+}
+
+/* Both badges use the same photographed pile and silhouette as the upper row.
+   Sample clean fur above the original stamp for the centre under the new glyph. */
+.home .fur-badge {position:relative;display:grid;place-items:center;width:clamp(88px,24vw,130px);aspect-ratio:1;isolation:isolate;}
+.home .fur-badge i {position:absolute;inset:0;background:url('/fur-glyph-0.webp') center/contain no-repeat;filter:sepia(.25) saturate(.78) brightness(.95) drop-shadow(0 5px 8px #182a235e);}
+.home .fur-badge i::after {content:"";position:absolute;inset:30% 23% 31%;background:url('/fur-glyph-0.webp') 50% 12% / 205% 420% no-repeat;mask-image:linear-gradient(transparent,#000 13%,#000 87%,transparent),linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask-composite:intersect;}
+.home .fur-badge.laws i {filter:sepia(.65) hue-rotate(42deg) saturate(.66) brightness(.93) drop-shadow(0 5px 8px #182a235e);}
+.home .fur-badge b {position:relative;color:#513722;text-shadow:none;font:normal clamp(31px,8.6vw,47px)/1 "Apple Color Emoji","Segoe UI Emoji",serif;}
+.home .fur-badge.laws b {font-family:serif;}
+
+#wardEndControl:not([hidden]) {display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f4efe4;color:#253c31;border-radius:10px;padding:9px 12px;}
+#wardEnd {font:inherit;max-width:68%;color:inherit;}
+.reader-scene button.verse-number {font:600 .57em/1.6 system-ui;min-width:2em;vertical-align:middle;color:#253c31;text-shadow:none;border-radius:99px;padding:2px 4px;cursor:pointer;}
+
+.reader-scene #reader .readinghead .reading-inspiration{font-family:system-ui,-apple-system,sans-serif;font-size:16px;font-weight:700;line-height:1.9;color:#244c43;margin:10px auto 4px;max-width:38em;text-shadow:none;letter-spacing:normal;}
+
+/* Shared reading theme: one shaded landscape and clear white typography. */
+.nature::before,.reader-scene::before,.message-scene::before {
+  background:linear-gradient(#0d1f1894,#0d1f18a3),url('/waterfall.webp') center / cover no-repeat;
+}
+.home {background:linear-gradient(#0d1f1894,#0d1f18a3),url('/waterfall.webp') center / cover no-repeat;}
+.nature {color:#fff;font-weight:700;text-shadow:0 1px 3px #102018;}
+.nature h1,.nature h2,.nature h3,.nature p,.nature label,.nature summary,.nature a,.nature small,.nature .small,.nature .eyebrow,.nature dt,.nature dd,.nature .law-verse,.nature .message-verse,.nature .reflection,.nature .verse-panel,.nature .dua-panel,.nature .law-content,.nature .law-link small,.nature .law-content h2 a,.nature .law-content dt {
+  color:#fff;font-weight:700;text-shadow:0 1px 3px #102018;
+}
+.nature .card,.nature .law-link,.nature .law-content article,.nature .dua-panel,.nature .verse-panel,.nature .reflection,.nature .dock {
+  background:transparent;border:0;border-radius:0;box-shadow:none;backdrop-filter:none;color:#fff;
+}
+.nature .card,.nature .law-link,.nature .law-content article {border-bottom:1px solid #ffffff70;padding:20px 0;}
+.nature .law-list {gap:0;}
+.nature .law-content article {margin-block:0;}
+.nature .law-content dl {border-color:#ffffff70;padding-top:12px;}
+.nature .law-content dt {margin-top:20px;}
+.nature .dua {border-color:#ffffff70;}
+.nature .dua-panel {padding-inline:0;}
+.nature .dua-view {border-color:#ffffff70;}
+.reader-scene #reader .readinghead,.reader-scene #reader .row,.reader-scene #reader figcaption,.reader-scene #reader>p,.reader-scene #wardEndControl:not([hidden]) {
+  background:transparent;color:#fff;border-radius:0;border:0;border-bottom:1px solid #ffffff70;padding:14px 4px;
+}
+.reader-scene #reader .readinghead .reading-inspiration {color:#fff;text-shadow:0 1px 3px #102018;font-weight:700;}
+.reader-scene .mushaf-text,.message-scene .verse-panel .message-verse,.message-scene .verse-panel .small,.message-scene .reflection,.nature .dua blockquote,.nature .law-verse {
+  color:#fff;font-weight:700;text-shadow:0 1px 2px #102018; -webkit-text-stroke:0;letter-spacing:normal;
+}
+.nature .law-verse {font-synthesis:weight;}
+.message-scene main {padding-top:28px;}
+.message-scene .verse-panel,.message-scene .reflection {padding:20px 4px;text-shadow:0 1px 3px #102018;border-bottom:1px solid #ffffff70;}
+.message-scene .verse-panel::before,.message-scene .reflection::before,.message-scene .verse-panel::after {content:none;}
+.nature #notice:not(:empty) {background:transparent;color:#fff;border-radius:0;border-bottom:1px solid #ffffff70;}
+.nature .badge {background:transparent;color:#fff;font-weight:700;}
+.nature progress {accent-color:#d8e8c8;background:#ffffff30;}
+.nature progress::-webkit-progress-bar {background:#ffffff30;}
+.nature progress::-webkit-progress-value {background:#d8e8c8;}
+.nature progress::-moz-progress-bar {background:#d8e8c8;}
+/* Controls retain the reference's light surfaces and dark, readable labels. */
+.nature input,.nature select,.nature #wardEnd,.nature .dua-filters select {background:#fffdf7;color:#253c31;text-shadow:none;font-weight:700;color-scheme:light;}
+.nature button,.nature .bottom-nav a {color:#253c31;text-shadow:none;font-weight:700;}
+.nature button:disabled {opacity:1;color:#596557;background:#deded3;cursor:not-allowed;}
+.reader-scene button.verse-number {background:transparent;color:#fff;border:1px solid #ffffffb3;text-shadow:none;}
+.nature .bottom-nav {background:linear-gradient(transparent,#10201866);}
+.home .choice {font-weight:700;}
+.nature :focus-visible {outline:3px solid #fff;outline-offset:4px;}
+.message-scene main>h1 {color:#fff;font-weight:700;text-shadow:0 1px 3px #102018;}
+
+/* Transparent controls keep the landscape visible, including reading times. */
+.nature input,.nature select,.nature #wardEnd,.nature .dua-filters select,
+.nature button,.nature .bottom-nav a {
+  background:rgba(12,28,22,.22);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.55);
+  box-shadow:none;
+  font-weight:700;
+  text-shadow:0 1px 2px #102018;
+  color-scheme:dark;
+}
+.nature select option {background:#213b30;color:#fff;}
+.nature input::-webkit-date-and-time-value {color:#fff;text-align:center;}
+.nature input::-webkit-datetime-edit {color:#fff;}
+.nature button:disabled {background:rgba(12,28,22,.15);color:#d4dcd5;border-color:#ffffff35;}
+.nature button:not(:disabled):hover,.nature .bottom-nav a:hover {background:rgba(12,28,22,.4);}
+.nature input:focus,.nature select:focus {background:rgba(12,28,22,.4);}
+.nature #smaller,.nature #larger,.reader-scene button.verse-number {background:transparent;}
+.analytics-choice{position:fixed;z-index:30;inset:auto 12px max(12px,env(safe-area-inset-bottom));max-width:620px;margin:auto;padding:16px;background:#172e26f5;color:white;border:1px solid #ffffff80;border-radius:14px;font:600 15px/1.8 system-ui;box-shadow:0 8px 30px #0005;text-shadow:none}.analytics-choice p{margin:0 0 10px}.analytics-choice a{color:#fff;text-decoration:underline}.analytics-choice div{display:flex;gap:8px;flex-wrap:wrap}.analytics-choice button{background:transparent;color:white;border:1px solid #fff9;padding:9px 12px;font-weight:700}.home .site-links{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin-top:24px;font-size:14px}.home .site-links a{color:white;text-shadow:0 1px 3px #102018;font-weight:700}
+
+/* A standalone opening, above verse 1, with the original Quran glyphs. */
+.reader-scene .quran-basmala {display:block;text-align:center;margin-bottom:.35em;font-size:.8em;}

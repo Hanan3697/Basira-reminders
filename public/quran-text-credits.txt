@@ -1,0 +1,4 @@
+Quran text from The Noble Qur’an Encyclopedia, via Quran JSON by Risan Bagja Pradana.
+https://github.com/risan/quran-json
+CC BY-SA 4.0 — https://creativecommons.org/licenses/by-sa/4.0/
+The prayer cards display excerpts from the cited verses.
