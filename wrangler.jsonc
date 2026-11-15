@@ -3,8 +3,8 @@
  "main":"worker/index.mjs",
  "compatibility_date":"2026-11-15",
  "workers_dev":true,
- "assets":{"directory":"./public","binding":"ASSETS","run_worker_first":["/statistics","/api/*"],"html_handling":"none"}
- // Add a D1 binding named DB after creating the database in the target account.
+ "assets":{"directory":"./public","binding":"ASSETS","run_worker_first":["/statistics","/api/*"],"html_handling":"none"},
+ "d1_databases":[{"binding":"DB","database_name":"basira-db","database_id":"9399fabd-910c-4ffe-90c1-2aef608f1b4b","migrations_dir":"drizzle"}]
  // Configure ACCESS_TEAM_DOMAIN, ACCESS_AUD and ADMIN_EMAIL in Worker variables.
  // Missing configuration fails closed: statistics are never made public.
 }
