@@ -1,0 +1,10 @@
+const $=id=>document.getElementById(id),arab=n=>Number(n).toLocaleString('ar-OM'),today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Muscat',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+let state={times:['05:45','09:00','13:00']};
+try{const saved=JSON.parse(localStorage.getItem('ward-v1')||'{}');if(Array.isArray(saved.times)&&saved.times.length)state.times=saved.times}catch{}
+function persist(){const saved=JSON.parse(localStorage.getItem('ward-v1')||'{}');localStorage.setItem('ward-v1',JSON.stringify({...saved,times:state.times,sessions:state.times.length}))}
+function showTimes(times=state.times){ $('timeInputs').replaceChildren();times.forEach((t,i)=>{const row=document.createElement('div');row.className='row';const label=document.createElement('label');label.style.flex='1';label.textContent='وقت القراءة '+arab(i+1);const input=document.createElement('input');input.type='time';input.value=t;input.dataset.timeIndex=i;label.insertAdjacentHTML('afterbegin','<span class="fur-action fa-time" aria-hidden="true"></span>');label.append(input);row.append(label);if(times.length>1){const del=document.createElement('button');del.className='secondary';del.innerHTML='<span class="fur-action fa-remove" aria-hidden="true"></span>حذف';del.onclick=()=>{const draft=readTimes();draft.splice(i,1);showTimes(draft)};row.append(del)}$('timeInputs').append(row)})}
+$('saveTimes').onclick=()=>{const times=[...document.querySelectorAll('[data-time-index]')].map(el=>el.value);if(times.some(t=>!/^([01]\d|2[0-3]):[0-5]\d$/.test(t))||new Set(times).size!==times.length){$('timeStatus').textContent='يرجى اختيار أوقات صحيحة ومختلفة.';return}state.times=times.sort();state.sessions=times.length;try{persist()}catch{$('timeStatus').textContent='تعذّر حفظ الأوقات على الجهاز. أعد المحاولة.';return}showTimes();window.dispatchEvent(new Event("ward-times-saved"));$('timeStatus').textContent='تم حفظ أوقات القراءة بتوقيت عُمان.'};
+$('addTime').onclick=()=>{showTimes([...readTimes(),''])};showTimes();
+function readTimes() {
+  return [...document.querySelectorAll('[data-time-index]')].map(el => el.value);
+}
