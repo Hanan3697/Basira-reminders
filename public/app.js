@@ -96,7 +96,14 @@ for (const verse of pageVerses) {
       text = text.slice(boundary + 1);
     }
   }
-  lines.append(text, '\u00a0', number, ' ');
+  const ayah = document.createElement('span');
+  ayah.className = 'ayah-interactive';
+  ayah.dataset.ayah = verse.numberInSurah;
+  ayah.tabIndex = 0;
+  ayah.setAttribute('role', 'group');
+  ayah.setAttribute('aria-label', 'خيارات الآية ' + arab(verse.numberInSurah));
+  ayah.append(text, '\u00a0', number);
+  lines.append(ayah, ' ');
 }
 figure.append(caption,pageNavigation(page),lines,pageNavigation(page));$('verses').append(figure)});$('range').textContent='من الآية '+arab(state.pos+1)+' إلى الآية '+arab(target)+' — الصفحات '+arab(pages[0])+' إلى '+arab(pages[pages.length-1]);}if(reviewPage!==null)$('range').textContent='مراجعة الصفحة '+arab(reviewPage)+' · موضع قراءتك محفوظ';}
 $('complete').onclick=()=>{saveStop(target)};$('undo').onclick=()=>{if(previous!==null){state.pos=previous;reviewPage=null;previous=null;persist();render()}};
