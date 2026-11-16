@@ -30,7 +30,7 @@ test('device schedules update and disable; expired subscriptions stop alarms',as
 test('alarm sends only when due, advances to next day and does not repeat successful delivery',async()=>{
  const f=fixture(),endpoint='https://fcm.googleapis.com/fcm/send/test';await f.object.fetch(req('enable',{endpoint,times:['05:45']}));
  const sub=f.entries.get('subscription');sub.due=Date.now()-1000;f.entries.set('subscription',sub);
- let sends=0;const original=globalThis.fetch;globalThis.fetch=async(url,options)=>{assert.equal(url,endpoint);assert.equal(options.redirect,'error');assert.equal(options.body.byteLength,0);assert.equal(options.headers.Urgency,'high');assert.match(options.headers.Authorization,/^vapid /);sends++;return new Response(null,{status:201})};
+ let sends=0;const original=globalThis.fetch;globalThis.fetch=async(url,options)=>{assert.equal(url,endpoint);assert.equal(options.redirect,'manual');assert.equal(options.body.byteLength,0);assert.equal(options.headers.Urgency,'high');assert.match(options.headers.Authorization,/^vapid /);sends++;return new Response(null,{status:201})};
  try{await f.object.alarm();assert.equal(sends,1);assert.ok(f.alarm>Date.now());await f.object.alarm();assert.equal(sends,1)}finally{globalThis.fetch=original}
 });
 test('public push routes require matching origin, device capability and bounded JSON',async()=>{

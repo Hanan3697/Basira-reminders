@@ -60,7 +60,7 @@ export class ReadingPush {
    if(!cached||cached.origin!==origin||cached.until<now){cached={origin,until:now+3500000,value:await pushAuthorization(endpoint,await this.keys())};await this.storage.put('authorization',cached)}
    stage='network';
    // Explicit zero-byte body gives APNs an unambiguous Content-Length: 0.
-   const result=await fetch(endpoint,{method:'POST',redirect:'error',headers:{Authorization:cached.value,TTL:'600',Urgency:'high','Content-Type':'application/octet-stream'},body:new Uint8Array(0),signal:AbortSignal.timeout(15000)});
+   const result=await fetch(endpoint,{method:'POST',redirect:'manual',headers:{Authorization:cached.value,TTL:'600',Urgency:'high','Content-Type':'application/octet-stream'},body:new Uint8Array(0),signal:AbortSignal.timeout(15000)});
    let reason='';if(!result.ok){const data=await result.json().catch(()=>null);if(typeof data?.reason==='string'&&/^[A-Za-z0-9_]{1,64}$/.test(data.reason))reason=data.reason}else await result.body?.cancel();
    await this.storage.put('lastDelivery',{status:result.status,reason,time:Date.now()});return result.status;
   }catch(error){await this.storage.put('lastDelivery',{status:503,reason:stage==='signing'?'SigningFailed':error.name==='TimeoutError'?'SendTimeout':'NetworkFailure',time:Date.now()});return 503}
