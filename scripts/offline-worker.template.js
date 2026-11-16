@@ -16,6 +16,10 @@ self.addEventListener('fetch',event=>{
  if(event.request.method!=='GET'||url.origin!==self.location.origin||!allowed.has(path))return;
  event.respondWith((async()=>{
   const cache=await caches.open(CACHE);
+  // Refresh opened pages online; keep the installed bundle for offline fallback.
+  if(event.request.mode==='navigate'){
+   try { const response=await fetch(new Request(event.request,{cache:'no-store'})); if(response.ok){await cache.put(path,response.clone());return response;} } catch {}
+  }
   const saved=await cache.match(path);
   if(saved)return saved;
   // Recover evicted assets when connected; never cache API or admin responses.

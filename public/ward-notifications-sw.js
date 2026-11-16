@@ -1,4 +1,4 @@
-const CACHE='basira-offline-349126410bd1e850';
+const CACHE='basira-offline-0a6aa80dffda67b5';
 const FILES=["/Amiri-OFL.txt","/AmiriQuran.ttf","/analytics.js","/app.js","/data/message-refs.json","/data/muyassar.json","/dua-hands.svg","/duas.html","/duas.js","/favicon.svg","/floral-light.webp","/fur-glyph-0.webp","/fur-glyph-1.webp","/fur-panel-0.webp","/fur-panel-1.webp","/gold-book.svg","/icon-180.png","/icon-192.png","/icon-512.png","/icon.svg","/index.html","/khareef-window.webp","/laws.html","/laws/attachment.html","/laws/attraction.html","/laws/focus.html","/laws/increase.html","/laws/release.html","/laws/worthiness.html","/manifest.json","/message-lantern.webp","/message.html","/message.js","/nature-0.webp","/nature-1.webp","/offline.js","/plush-0.webp","/plush-1.webp","/plush-2.webp","/plush-3.webp","/privacy.html","/privacy.js","/push-settings.js","/quran-text-credits.txt","/quran.json","/reader-lantern.webp","/reader.html","/reminders.js","/sources.html","/tafsir-data.js","/verse-study.css","/verse-study.js","/ward.css","/waterfall.webp"];
 const allowed=new Set(FILES);
 self.addEventListener('install',event=>event.waitUntil((async()=>{
@@ -16,6 +16,10 @@ self.addEventListener('fetch',event=>{
  if(event.request.method!=='GET'||url.origin!==self.location.origin||!allowed.has(path))return;
  event.respondWith((async()=>{
   const cache=await caches.open(CACHE);
+  // Refresh opened pages online; keep the installed bundle for offline fallback.
+  if(event.request.mode==='navigate'){
+   try { const response=await fetch(new Request(event.request,{cache:'no-store'})); if(response.ok){await cache.put(path,response.clone());return response;} } catch {}
+  }
   const saved=await cache.match(path);
   if(saved)return saved;
   // Recover evicted assets when connected; never cache API or admin responses.

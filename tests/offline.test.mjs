@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 const origin='https://basira.example';
-function harness(fail=false){
+function harness(fail=false,network){
  const handlers={},stores=new Map();let skip=false;
  class LocalRequest extends Request {constructor(url,init){super(new URL(url,origin),init)}}
  const caches={async open(key){if(!stores.has(key))stores.set(key,new Map());const data=stores.get(key);return {async addAll(files){if(fail)throw Error('interrupted');for(const req of files){const path=new URL(req.url).pathname;data.set(path,new Response(readFileSync('public'+path))) }},async match(path){return data.get(path)?.clone()},async put(path,r){data.set(path,r)},async keys(){return [...data.keys()].map(p=>new LocalRequest(p))}}},async keys(){return [...stores.keys()]},async delete(k){return stores.delete(k)}};
- runInNewContext(readFileSync('public/ward-notifications-sw.js','utf8'),{URL,Request:LocalRequest,Response,Set,caches,fetch:async()=>{throw Error('offline')},self:{location:{origin},addEventListener:(n,fn)=>handlers[n]=fn,skipWaiting:async()=>{skip=true},clients:{claim:async()=>{}}}});
- return {handlers,stores,get skipped(){return skip},async install(){let promise;handlers.install({waitUntil:p=>promise=p});await promise},fetch(path,method='GET'){let result;handlers.fetch({request:new LocalRequest(path,{method}),respondWith:r=>result=r});return result}};
+ runInNewContext(readFileSync('public/ward-notifications-sw.js','utf8'),{URL,Request:LocalRequest,Response,Set,caches,fetch:async()=>{if(network)return new Response(network);throw Error('offline')},self:{location:{origin},addEventListener:(n,fn)=>handlers[n]=fn,skipWaiting:async()=>{skip=true},clients:{claim:async()=>{}}}});
+ return {handlers,stores,get skipped(){return skip},async install(){let promise;handlers.install({waitUntil:p=>promise=p});await promise},fetch(path,method='GET',navigation=false){let result;const request=new LocalRequest(path,{method});if(navigation)Object.defineProperty(request,'mode',{value:'navigate'});handlers.fetch({request,respondWith:r=>result=r});return result}};
 }
 test('complete offline bundle opens all sections and exact Quran text including installed launch URL',async()=>{
  const h=harness();await h.install();assert.equal(h.skipped,true);
@@ -20,3 +20,8 @@ test('private routes, external links, unknown routes and POST requests bypass of
  assert.equal(h.fetch('/index.html','POST'),undefined);
 });
 test('interrupted install never activates incomplete offline content',async()=>{const h=harness(true);await assert.rejects(h.install());assert.equal(h.skipped,false)});
+
+test('installed navigation refreshes online and still falls back offline',async()=>{
+ const online=harness(false,'new reader');await online.install();assert.equal(await (await online.fetch('/reader.html','GET',true)).text(),'new reader');
+ const offline=harness();await offline.install();assert.equal(await (await offline.fetch('/reader.html','GET',true)).text(),readFileSync('public/reader.html','utf8'));
+});
