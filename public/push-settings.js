@@ -1,2 +1,2 @@
-// Set to the deployed push-service origin after provisioning its Durable Objects.
-window.wardPushOrigin = '';
+// Push requests use the application's own origin.
+window.wardPushOrigin = '/api/push';

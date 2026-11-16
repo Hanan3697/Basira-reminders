@@ -23,7 +23,7 @@
     status.textContent=message || (ios&&!installed?'على الآيفون، أضف بصيرة للشاشة الرئيسية وافتحه من أيقونته لتفعيل الإشعارات.':
       !supported?'هذا المتصفح لا يتيح إشعارات الويب هنا. جرّب متصفحًا يدعمها.':
       Notification.permission==='denied'?'الإشعارات محظورة لهذا التطبيق. اسمح بها من إعدادات الجهاز أو المتصفح.':
-      active==='push'?'إشعارات بصيرة مفعّلة على هذا الجهاز حسب أوقاتك المحفوظة.':
+      active==='push'?'إشعارات بصيرة مفعّلة حسب أوقاتك بتوقيت عُمان، وتصل والتطبيق مغلق عند توفر الإنترنت.':
       active?'تذكيرات هذه الصفحة مفعّلة ما دامت مفتوحة ونشطة.':
       background?'اختر أوقاتك واحفظها ثم اسمح بإشعارات بصيرة.':'التذكير متاح أثناء فتح صفحة القراءة. إرسال المواعيد والتطبيق مغلق بانتظار ربط خدمة الإرسال.');
     enable.textContent=background?'تفعيل إشعارات بصيرة':'تفعيل التذكير أثناء فتح الصفحة';
@@ -32,7 +32,7 @@
     let token=localStorage.getItem('ward-push-device');
     if(!token){token=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');localStorage.setItem('ward-push-device',token);}
     const res=await fetch(window.wardPushOrigin+route,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(payload||{})});
-    if(!res.ok)throw Error('push service');
+    if(!res.ok)throw Error(res.status===429?'wait_one_minute':'push service');
     return res.json();
   }
   async function sync(){
@@ -48,7 +48,9 @@
       if(background){
         const {key}=await api('/key');
         const bytes=Uint8Array.from(atob(key.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
-        const sub=await reg.pushManager.getSubscription()||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:bytes});
+        let sub=await reg.pushManager.getSubscription();
+        if(sub?.options.applicationServerKey){const old=new Uint8Array(sub.options.applicationServerKey);if(old.length!==bytes.length||old.some((b,i)=>b!==bytes[i])){await sub.unsubscribe();sub=null}}
+        sub=sub||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:bytes});
         await api('/enable',{endpoint:sub.endpoint,times:times()});
         localStorage.setItem('ward-reminder-mode','push');
       }else{
@@ -58,7 +60,7 @@
       renderStatus();
     }catch{renderStatus('تعذّر تفعيل التذكير. تحقّق من إذن الإشعارات والاتصال ثم حاول مجددًا.');}
   };
-  test.onclick=()=>show('تجربة إشعار بصيرة').catch(()=>renderStatus('تعذّر عرض إشعار التجربة.'));
+  test.onclick=async()=>{test.disabled=true;try{if(saved()==='push'){await api('/test');renderStatus('أُرسل إشعار التجربة من الخادم. يمكنك تجربة موعد قريب والتطبيق مغلق.')}else await show('تجربة إشعار بصيرة')}catch(error){renderStatus(error.message==='wait_one_minute'?'انتظر دقيقة بين إشعارات التجربة.':'تعذّر إرسال إشعار التجربة. تحقّق من الاتصال وأعد تفعيل الإشعارات.')}finally{test.disabled=false}};
   stop.onclick=async()=>{
     try{
       if(saved()==='push'){

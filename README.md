@@ -13,7 +13,7 @@ The Quran text, font, reader, reflections, prayers, backgrounds and reading sett
 5. Provide an explicit browser reading-progress transfer before redirecting users. Browser storage does not automatically transfer between domains. Keep the old application live meanwhile.
 6. Test reading, saved position, the standalone basmala, navigation, reflections, manifest and private statistics on the new domain. Verify historic totals against the old dashboard, then share the new URL.
 
-No Cloudflare deployment or data transfer has been performed by adding this source. Background push still requires a separate notification service; this migration does not activate it.
+No Cloudflare deployment or data transfer has been performed by adding this source. Background push uses the ReadingPush SQLite Durable Object configured in wrangler.jsonc. Each device has a private, capability-addressed object with its own generated VAPID key, optional subscription and Muscat-time alarm. Private keys never leave server storage. No separate origin, cron job or manually provisioned key is needed. The build token must permit deploying Durable Objects. Disable deletes the subscription and alarm; expired endpoints are removed automatically. Push uses empty payloads; the service worker supplies the fixed Arabic reminder. Validate a real device subscription and a scheduled notification with the screen locked after deployment.
 
 ## Local checks
 

@@ -1,9 +1,12 @@
+import {pushRoute} from './push.mjs';
+export {ReadingPush} from './push.mjs';
 import {authorize} from './auth.mjs';
 import {validVisit,validView,recordVisit,recordView,stats} from '../lib/analytics.mjs';
 import {page,dashboard} from '../lib/dashboard.mjs';
 const privateHeaders={'Cache-Control':'private, no-store','Vary':'Cookie, Cf-Access-Jwt-Assertion','X-Robots-Tag':'noindex, nofollow','X-Content-Type-Options':'nosniff'};
 export default {async fetch(request,env){
  const url=new URL(request.url);
+ if(url.pathname.startsWith('/api/push/'))return pushRoute(request,env);
  if(url.pathname==='/statistics'||url.pathname==='/api/analytics/stats'){
   if(request.method!=='GET')return new Response(null,{status:405,headers:privateHeaders});
   const status=await authorize(request,env);
