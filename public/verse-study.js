@@ -1,74 +1,70 @@
-/* Verbatim source tafsir; source details are in sources.html. */
+/* Source tafsir is displayed verbatim. Basmalah is separate from numbered Baqarah ayahs. */
 (() => {
-  const host = document.getElementById('verses');
-  if (!host) return;
-  const book = '<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 5C9 3 5 3 2 4v15c3-1 7-1 10 1 3-2 7-2 10-1V4c-3-1-7-1-10 1Zm0 0v15"/></svg>';
-  const el = (tag, text, cls) => { const n = document.createElement(tag); if(text) n.textContent=text; if(cls)n.className=cls; return n; };
-  const button = (text, action) => { const n=el('button',text); n.type='button'; n.onclick=action; return n; };
-  let tafsir=null, loadFailed=false, ayahs=[], selected=1, tab='tafsir', timer, origin, suppress=false, sourceFocus;
-  const dialog=el('dialog',null,'verse-study');
-  dialog.setAttribute('aria-label','قراءة الآية مع التفسير');
-  const header=el('header'), title=el('h2');
-  header.append(title,button('إغلاق ×',()=>dialog.close()));
-  const quote=el('p',null,'study-ayah');
-  const tabs=el('div',null,'study-tabs'); tabs.setAttribute('role','tablist');
-  const body=el('div',null,'study-body'); body.setAttribute('aria-live','polite');
-  const nav=el('footer'), prev=button('الآية السابقة',()=>show(selected-1)), next=button('الآية التالية',()=>show(selected+1));
-  const read=button('',()=>{tab='reading';draw()}); read.innerHTML=book+'<small>قراءة مع التفسير</small>';
-  read.setAttribute('aria-label','قراءة مع التفسير');
-  nav.append(prev,read,next);
-  const sources=el('details',null,'study-sources'); sources.append(el('summary','المصادر والمراجع'));
-  const sourcesText=el('p'); sources.append(sourcesText);
-  for(const [key,label] of [['tafsir','تفسير الآية'],['reading','قراءة مع التفسير']]){
-    const b=button(label,()=>{tab=key;draw()});b.dataset.tab=key;b.setAttribute('role','tab');tabs.append(b);
+  const host=document.getElementById('verses');if(!host)return;
+  const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n};
+  const btn=(text,fn)=>{const b=el('button',text);b.type='button';b.onclick=fn;return b};
+  const book='<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 5C9 3 5 3 2 4v15c3-1 7-1 10 1 3-2 7-2 10-1V4c-3-1-7-1-10 1Zm0 0v15"/></svg>';
+  let data=null,ayahs=[],selected=1,reading=false,failed=false,sourceFocus,timer,origin,suppress=false;
+  const dialog=el('dialog',null,'verse-study');dialog.setAttribute('aria-label','التفسير الميسّر');
+  const header=el('header'),heading=el('h2'),close=btn('إغلاق ×',()=>dialog.close());header.append(heading,close);
+  const body=el('div',null,'study-body');body.setAttribute('aria-live','polite');
+  const footer=el('footer'),previous=btn('السابق',()=>navigate(-1)),next=btn('التالي',()=>navigate(1));
+  const toggle=btn('',()=>{reading=!reading;draw(true)});toggle.innerHTML=book+'<small>قراءة مع التفسير</small>';toggle.setAttribute('aria-label','قراءة مع التفسير');
+  footer.append(previous,toggle,next);
+  const sources=el('a','المصادر والمراجع','study-source-link');sources.href='/sources.html';
+  dialog.append(header,body,footer,sources);document.body.append(dialog);
+  const ready=Promise.all([fetch('/quran.json').then(r=>{if(!r.ok)throw Error();return r.json()}),window.BasiraTafsir.load()]).then(([q,t])=>{ayahs=q.data.ayahs;data=t;if(dialog.open)draw(true)}).catch(()=>{failed=true;if(dialog.open)draw()});
+  function textFor(id){
+    const text=ayahs[0]?.text||'',boundary=text.lastIndexOf(' ');
+    if(id===0)return text.slice(0,boundary).trim();
+    if(id===1)return text.slice(boundary+1);
+    return ayahs[id-1]?.text||'';
   }
-  dialog.append(header,quote,tabs,body,nav,sources); document.body.append(dialog);
-  const actions=el('dialog',null,'verse-study verse-actions'); actions.setAttribute('aria-label','خيارات الآية');
-  const actionQuote=el('p',null,'study-ayah');
-  const openBook=button('',()=>{actions.close();tab='reading';show(selected)});openBook.innerHTML=book+'<small>قراءة مع التفسير</small>';
-  actions.append(actionQuote,openBook,button('إغلاق ×',()=>actions.close()));document.body.append(actions);
-  // Display source records verbatim; no generated interpretations.
-  function content(id){
-    const box=el('div');
-    if(tafsir) window.BasiraTafsir.append(box,tafsir.ayahs['2:'+id]);
-    else box.append(el('p',loadFailed?'تعذّر تحميل التفسير. يرجى إعادة الفتح بعد اكتمال تنزيل التطبيق.':'جارٍ تحميل التفسير…'));
-    return box;
+  function currentPage(){return ayahs[Math.max(0,selected-1)]?.page||2}
+  function appendEntry(id){
+    const section=el('section',null,'study-reading-row');section.dataset.studyAyah=id;
+    const label=id===0?'البسملة':'الآية '+id.toLocaleString('ar-OM');
+    section.append(el('p',label,'study-entry-label'),el('p',textFor(id)+(id?' ﴿'+id.toLocaleString('ar-OM')+'﴾':''),'study-ayah'));
+    const commentary=el('div',null,'study-commentary');
+    if(data)window.BasiraTafsir.append(commentary,data.ayahs[id===0?'1:1':'2:'+id]);
+    else commentary.append(el('p',failed?'تعذّر تحميل التفسير. تأكد من اكتمال تنزيل نسخة الأوفلاين ثم أعد المحاولة.':'جارٍ تحميل التفسير…'));
+    section.append(commentary);body.append(section);
   }
-  function draw(){
-    title.textContent='سورة البقرة · الآية '+selected.toLocaleString('ar-OM');
-    quote.textContent=ayahs[selected-1]?.text||'';
-    prev.disabled=selected===1;next.disabled=selected===ayahs.length;
-    for(const b of tabs.children)b.setAttribute('aria-selected',String(b.dataset.tab===tab));
+  function draw(scroll=false){
+    dialog.classList.toggle('study-fullscreen',reading);
+    heading.textContent=reading?'سورة البقرة · قراءة مع التفسير · صفحة '+currentPage().toLocaleString('ar-OM'):(selected===0?'البسملة · التفسير الميسّر':'سورة البقرة · الآية '+selected.toLocaleString('ar-OM'));
+    toggle.querySelector('small').textContent=reading?'تفسير الآية':'قراءة مع التفسير';
+    toggle.setAttribute('aria-label',reading?'تفسير الآية':'قراءة مع التفسير');
+    previous.textContent=reading?'الصفحة السابقة':'الآية السابقة';next.textContent=reading?'الصفحة التالية':'الآية التالية';
+    previous.disabled=reading?currentPage()===2:selected===0;next.disabled=reading?currentPage()===49:selected===286;
     body.replaceChildren();
-    if(tab==='reading'){
-      const page=ayahs[selected-1]?.page;
-      for(const a of ayahs.filter(a=>a.page===page)){
-        const section=el('section',null,'study-reading-row');section.dataset.studyAyah=a.numberInSurah;
-        section.append(el('p',a.text+' ﴿'+a.numberInSurah.toLocaleString('ar-OM')+'﴾','study-ayah'),content(a.numberInSurah,'tafsir'));body.append(section);
-      }
-      body.querySelector(`[data-study-ayah="${selected}"]`)?.scrollIntoView({block:'nearest'});
-    }else body.append(content(selected,tab));
-    sourcesText.replaceChildren();
-    const link=el('a','المصادر والمراجع');link.href='/sources.html';sourcesText.append(link);
-
+    if(reading&&ayahs.length){
+      const page=currentPage();if(page===2)appendEntry(0);
+      for(const a of ayahs.filter(a=>a.page===page))appendEntry(a.numberInSurah);
+    }else appendEntry(selected);
+    if(scroll)requestAnimationFrame(()=>{
+      const row=body.querySelector(`[data-study-ayah="${selected}"]`);
+      body.scrollTop=reading&&row?Math.max(0,row.offsetTop-body.offsetTop-12):0;
+    });
   }
-  function show(id){if(id<1||id>ayahs.length)return;selected=id;draw();if(!dialog.open)dialog.showModal();}
-  function openActions(node){if(!ayahs.length)return;selected=Number(node.dataset.ayah);sourceFocus=node;actionQuote.textContent=ayahs[selected-1].text;actions.showModal();suppress=true;}
+  function navigate(delta){
+    if(reading){const page=currentPage()+delta;if(page<2||page>49)return;selected=page===2?0:ayahs.find(a=>a.page===page).numberInSurah;}
+    else selected=Math.max(0,Math.min(286,selected+delta));
+    draw(true);
+  }
+  function open(node){sourceFocus=node;selected=Number(node.dataset.ayah);reading=false;draw();if(!dialog.open)dialog.showModal();body.scrollTop=0;}
   function cancel(){clearTimeout(timer);timer=null;}
-  host.addEventListener('pointerdown',e=>{
-    if(e.button!==0)return;const node=e.target.closest('[data-ayah]');if(!node)return;
-    suppress=false;origin={x:e.clientX,y:e.clientY};cancel();timer=setTimeout(()=>openActions(node),550);
-  });
-  host.addEventListener('pointermove',e=>{if(origin && Math.hypot(e.clientX-origin.x,e.clientY-origin.y)>10)cancel()});
-  for(const name of ['pointerup','pointercancel','pointerleave'])host.addEventListener(name,cancel);
+  host.addEventListener('pointerdown',e=>{if(e.button!==0)return;const node=e.target.closest('[data-ayah]');if(!node)return;suppress=false;origin={x:e.clientX,y:e.clientY};cancel();timer=setTimeout(()=>{suppress=true;open(node)},550)});
+  host.addEventListener('pointermove',e=>{if(origin&&Math.hypot(e.clientX-origin.x,e.clientY-origin.y)>10)cancel()});
+  for(const event of ['pointerup','pointercancel','pointerleave'])host.addEventListener(event,cancel);
   window.addEventListener('scroll',cancel,{passive:true});
-  host.addEventListener('click',e=>{if(suppress){e.preventDefault();e.stopImmediatePropagation();suppress=false}},true);
-  host.addEventListener('contextmenu',e=>{const node=e.target.closest('[data-ayah]');if(node){e.preventDefault();cancel();if(!actions.open)openActions(node)}});
-  host.addEventListener('keydown',e=>{if(e.target.matches('[data-ayah]') && ['Enter',' '].includes(e.key)){e.preventDefault();openActions(e.target)}});
-  for(const d of [dialog,actions]){
-    d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()}});
-    d.addEventListener('close',()=>{suppress=false;if(!dialog.open&&!actions.open)sourceFocus?.focus({preventScroll:true})});
-  }
-  window.BasiraTafsir.load().then(data=>{tafsir=data;if(dialog.open)draw()}).catch(()=>{loadFailed=true;if(dialog.open)draw()});
-  fetch('/quran.json').then(r=>{if(!r.ok)throw Error();return r.json()}).then(q=>{ayahs=q.data.ayahs}).catch(()=>{});
+  host.addEventListener('click',e=>{
+    if(suppress){e.preventDefault();e.stopImmediatePropagation();suppress=false;return;}
+    // A short tap on the ayah number keeps the existing save-position action.
+    if(e.target.closest('.verse-number'))return;
+    const node=e.target.closest('[data-ayah]');if(node){e.preventDefault();open(node)}
+  },true);
+  host.addEventListener('contextmenu',e=>{const node=e.target.closest('[data-ayah]');if(node){e.preventDefault();cancel();suppress=true;open(node)}});
+  host.addEventListener('keydown',e=>{if(e.target.matches('[data-ayah]')&&['Enter',' '].includes(e.key)){e.preventDefault();open(e.target)}});
+  dialog.addEventListener('close',()=>{cancel();suppress=false;reading=false;sourceFocus?.focus({preventScroll:true})});
 })();

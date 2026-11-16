@@ -26,7 +26,7 @@ for label in p.labels:
  if name not in names:names[name]=max(names.values())+1
  key=f'{names[name]}:{int(num)}';assert (names[name],int(num)) in bykey;refs.append(key)
 assert len(names)==114 and len(refs)==122,(len(names),len(refs))
-needed=set(refs)|{f'2:{i}' for i in range(1,287)}
+needed={'1:1'}|set(refs)|{f'2:{i}' for i in range(1,287)}
 records={f'{s}:{a}':{'text':text,'footnotes':footnotes} for _,s,a,text,footnotes in rows if f'{s}:{a}' in needed}
 assert set(records)==needed
 assert not any('<' in r['text'] for r in records.values())

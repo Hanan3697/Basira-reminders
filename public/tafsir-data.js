@@ -2,7 +2,7 @@
   let pending;
   window.BasiraTafsir = {
     load() {
-      if(!pending) pending=fetch('/data/muyassar.json').then(r=>{if(!r.ok)throw Error('tafsir unavailable');return r.json()}).then(data=>{if(data.source?.key!=='arabic_moyassar'||Object.keys(data.ayahs||{}).length!==399)throw Error('invalid tafsir');return data}).catch(error=>{pending=null;throw error});
+      if(!pending) pending=fetch('/data/muyassar.json').then(r=>{if(!r.ok)throw Error('tafsir unavailable');return r.json()}).then(data=>{if(data.source?.key!=='arabic_moyassar'||Object.keys(data.ayahs||{}).length!==400)throw Error('invalid tafsir');return data}).catch(error=>{pending=null;throw error});
       return pending;
     },
     append(container,record) {

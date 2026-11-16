@@ -90,7 +90,10 @@ for (const verse of pageVerses) {
     const boundary = text.lastIndexOf(' ');
     if (boundary > 0) {
       const opening = document.createElement('span');
-      opening.className = 'quran-basmala';
+      opening.className = 'quran-basmala ayah-interactive';
+      opening.dataset.ayah = '0';
+      opening.tabIndex = 0;
+      opening.setAttribute('aria-label', 'تفسير البسملة');
       opening.textContent = text.slice(0, boundary + 1);
       lines.append(opening);
       text = text.slice(boundary + 1);

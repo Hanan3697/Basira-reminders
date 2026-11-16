@@ -7,7 +7,7 @@ test('every Baqarah ayah and daily message has its own source tafsir',()=>{
  assert.equal(tafsir.source.key,'arabic_moyassar');assert.equal(tafsir.source.version,'1.0.0');
  for(let i=1;i<=286;i++)assert.ok(tafsir.ayahs['2:'+i]?.text);
  assert.equal(refs.length,122);for(const key of refs)assert.ok(tafsir.ayahs[key]?.text,key);
- assert.equal(Object.keys(tafsir.ayahs).length,399);
+ assert.equal(Object.keys(tafsir.ayahs).length,400);
 });
 test('tafsir assets, source page and message references are available in the offline bundle',()=>{
  const sw=read('public/ward-notifications-sw.js');
