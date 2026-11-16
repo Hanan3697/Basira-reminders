@@ -27,5 +27,9 @@ export default {async fetch(request,env){
   try{if(validView(data))await recordView(env.DB,data);else await recordVisit(env.DB,data);return new Response(null,{status:204,headers});}catch{return new Response(null,{status:503,headers});}
  }
  if(url.pathname.startsWith('/api/'))return new Response(null,{status:404});
+ if(url.pathname==='/'){
+  url.pathname='/index.html';
+  return env.ASSETS.fetch(new Request(url,request));
+ }
  return env.ASSETS.fetch(request);
 }};
