@@ -30,7 +30,7 @@ export class ReadingPush {
   const route=new URL(request.url).pathname.split('/').pop();
   const json=(value,status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
   if(route==='key')return json({key:(await this.keys()).publicKey});
-  if(route==='status'){const sub=await this.storage.get('subscription');return json({active:!!sub,next:sub?.due,lastDelivery:await this.storage.get('lastDelivery')})}
+  if(route==='status'){const sub=await this.storage.get('subscription');return json({transportVersion:2,active:!!sub,next:sub?.due,lastDelivery:await this.storage.get('lastDelivery')})}
   if(route==='disable'){await this.storage.delete('subscription');await this.storage.deleteAlarm();return json({ok:true})}
   const data=await request.json().catch(()=>null);
   if(route==='test'){
@@ -63,7 +63,7 @@ export class ReadingPush {
    const result=await fetch(endpoint,{method:'POST',redirect:'manual',headers:{Authorization:cached.value,TTL:'600',Urgency:'high','Content-Type':'application/octet-stream'},body:new Uint8Array(0),signal:AbortSignal.timeout(15000)});
    let reason='';if(!result.ok){const data=await result.json().catch(()=>null);if(typeof data?.reason==='string'&&/^[A-Za-z0-9_]{1,64}$/.test(data.reason))reason=data.reason}else await result.body?.cancel();
    await this.storage.put('lastDelivery',{status:result.status,reason,time:Date.now()});return result.status;
-  }catch(error){await this.storage.put('lastDelivery',{status:503,reason:stage==='signing'?'SigningFailed':error.name==='TimeoutError'?'SendTimeout':'NetworkFailure',time:Date.now()});return 503}
+  }catch(error){await this.storage.put('lastDelivery',{status:503,reason:stage==='signing'?'SigningFailed':error.name==='TimeoutError'?'SendTimeout':'NetworkFailure',detail:String(error.message||error.name).replace(/https?:\/\/[^\s]+/g,'[URL]').replace(/[A-Za-z0-9_-]{32,}/g,'[redacted]').slice(0,160),time:Date.now()});return 503}
  }
 
  alarm(){return this.ctx.blockConcurrencyWhile(async()=>{
