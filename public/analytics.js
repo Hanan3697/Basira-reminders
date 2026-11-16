@@ -3,15 +3,21 @@
  const section=location.pathname.startsWith('/laws')?'laws':({'/':'home','/index.html':'home','/reader.html':'reader','/message.html':'message','/duas.html':'duas'})[location.pathname];
  if(!section)return;
  // Aggregate one page opening without a browser, session or event identifier.
- fetch('/api/analytics/collect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'view',section}),keepalive:true,credentials:'omit',referrerPolicy:'no-referrer'}).catch(()=>{});
+ let viewed=false;
+ function recordView(){
+  if(viewed||document.hidden)return;
+  viewed=true;
+  fetch('/api/analytics/collect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'view',section}),keepalive:true,credentials:'omit',referrerPolicy:'no-referrer'}).catch(()=>{});
+ }
+ recordView();document.addEventListener('visibilitychange',recordView);
  const blocked=navigator.doNotTrack==='1'||navigator.globalPrivacyControl===true;
  async function record(){
   if(blocked||document.hidden)return;
   try{
    if(localStorage.getItem(consentKey)!=='yes')return;
    let visitor=localStorage.getItem('basira-visitor');if(!visitor){visitor=crypto.randomUUID();localStorage.setItem('basira-visitor',visitor)}
-   const now=Date.now();let session=JSON.parse(localStorage.getItem('basira-session')||'null');
-   if(!session||now-session.last>1800000||now<session.last)session={id:crypto.randomUUID(),last:now};
+   const now=Date.now(),day=new Date(now+4*3600000).toISOString().slice(0,10);let session=JSON.parse(localStorage.getItem('basira-session')||'null');
+   if(!session||now-session.last>1800000||now<session.last||session.day!==day)session={id:crypto.randomUUID(),last:now,day};
    session.last=now;localStorage.setItem('basira-session',JSON.stringify(session));
    await fetch('/api/analytics/collect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({visitor,session:session.id,section}),keepalive:true});
   }catch{/* Analytics must never interrupt reading. */}

@@ -16,7 +16,7 @@ await recordVisit(db,{...a,session:'44444444-4444-4444-8444-444444444444',visito
 assert.ok(validView({kind:'view',section:'home'}));assert.ok(!validView({kind:'view',section:'home',visitor:'private'}));
 await recordView(db,{section:'home'},now);await recordView(db,{section:'home'},now);await recordView(db,{section:'reader'},now-86400000);
 const result=await stats(db,now);
-assert.equal(result.today.visits,2);assert.equal(result.today.visitors,1);
+assert.equal(result.today.pageViews,2);assert.equal(result.today.sessions,2);assert.equal(result.all.sessions,3);assert.equal(result.today.visits,2);assert.equal(result.today.visitors,1);
 assert.equal(result.all.visits,3);assert.equal(result.all.visitors,2);
 assert.equal(result.sections.find(x=>x.section==='reader').visits,1);
 assert.equal(result.daily.length,2);

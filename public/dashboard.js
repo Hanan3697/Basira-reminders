@@ -6,8 +6,8 @@
  try{
   const response=await fetch('/api/analytics/stats',{cache:'no-store'});const data=await response.json();if(!response.ok)throw Error(data.error||'تعذّر تحميل الإحصاءات');
   $('totals').replaceChildren();
-  for(const [key,label] of [['all','الإجمالي التراكمي منذ بدء التسجيل'],['today','اليوم']]){
-   const tile=node('article','');tile.className='stats-tile';tile.append(node('h2',label),node('strong',n(data[key].visits)),node('span','زيارة صفحة'),node('p',n(data[key].visitors)+' مستخدم تقريبي وافق على الإحصاءات'));$('totals').append(tile);
+  for(const [key,label] of [['all','الإجمالي التراكمي منذ بدء التسجيل'],['today','اليوم'],['week','آخر ٧ أيام'],['month','آخر ٣٠ يومًا']]){
+   const tile=node('article','');tile.className='stats-tile';tile.append(node('h2',label),node('strong',n(data[key].pageViews??data[key].visits)),node('span','مشاهدة صفحة'),node('p',n(data[key].visitors)+' متصفح مختلف — من الموافقين فقط'),node('p',n(data[key].sessions??0)+' جلسة زيارة — من الموافقين فقط'));$('totals').append(tile);
   }
   $('since').textContent=data.since?'أول زيارة مسجلة: '+data.since:'لم تُسجّل زيارات بعد. ستظهر الأرقام مع مرات فتح الصفحات الجديدة.';
   $('popular').replaceChildren();for(const row of data.sections){const e=node('div','');e.className='popular-row';e.append(node('span',row.label),node('strong',n(row.visits)));$('popular').append(e)}
