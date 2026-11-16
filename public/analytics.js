@@ -1,4 +1,5 @@
 (()=>{
+ if(document.head){const offline=document.createElement('script');offline.src='/offline.js';document.head.append(offline)}
  const consentKey='basira-analytics-choice';
  const section=location.pathname.startsWith('/laws')?'laws':({'/':'home','/index.html':'home','/reader.html':'reader','/message.html':'message','/duas.html':'duas'})[location.pathname];
  if(!section)return;
