@@ -32,8 +32,9 @@
     let token=localStorage.getItem('ward-push-device');
     if(!token){token=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');localStorage.setItem('ward-push-device',token);}
     const res=await fetch(window.wardPushOrigin+route,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(payload||{})});
-    if(!res.ok)throw Error(res.status===429?'wait_one_minute':'push service');
-    return res.json();
+    const result=await res.json().catch(()=>({}));
+    if(!res.ok){const error=Error(result.error||'push_service');error.delivery=result.delivery;throw error}
+    return result;
   }
   async function sync(){
     const reg=await worker(),sub=await reg.pushManager.getSubscription();
@@ -60,7 +61,7 @@
       renderStatus();
     }catch{renderStatus('تعذّر تفعيل التذكير. تحقّق من إذن الإشعارات والاتصال ثم حاول مجددًا.');}
   };
-  test.onclick=async()=>{test.disabled=true;try{if(saved()==='push'){await api('/test');renderStatus('أُرسل إشعار التجربة من الخادم. يمكنك تجربة موعد قريب والتطبيق مغلق.')}else await show('تجربة إشعار بصيرة')}catch(error){renderStatus(error.message==='wait_one_minute'?'انتظر دقيقة بين إشعارات التجربة.':'تعذّر إرسال إشعار التجربة. تحقّق من الاتصال وأعد تفعيل الإشعارات.')}finally{test.disabled=false}};
+  test.onclick=async()=>{test.disabled=true;try{if(saved()==='push'){await api('/test');renderStatus('أُرسل إشعار التجربة من الخادم. يمكنك تجربة موعد قريب والتطبيق مغلق.')}else await show('تجربة إشعار بصيرة')}catch(error){renderStatus(error.message==='wait_one_minute'?'أُرسلت تجربة بنجاح خلال الدقيقة الماضية؛ انتظر قليلًا.':error.message==='wait_five_seconds'?'انتظر خمس ثوانٍ ثم جرّب مجددًا.':error.message==='not_subscribed'?'اشتراك الإشعارات غير موجود على الخادم. اضغط تفعيل إشعارات بصيرة.':error.delivery?'رفضت خدمة الإرسال الإشعار. رمز التشخيص: '+error.delivery.status+' '+(error.delivery.reason||'Unknown'):'تعذّر الاتصال بخدمة الإرسال. حاول مجددًا عند توفر الإنترنت.')}finally{test.disabled=false}};
   stop.onclick=async()=>{
     try{
       if(saved()==='push'){
