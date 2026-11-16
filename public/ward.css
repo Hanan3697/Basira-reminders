@@ -342,3 +342,6 @@
 
 /* A standalone opening, above verse 1, with the original Quran glyphs. */
 .reader-scene .quran-basmala {display:block;text-align:center;margin-bottom:.35em;font-size:.8em;}
+
+/* Clearly readable source links on the shared nature background. */
+.home a[href="/sources.html"],.nature a[href="/sources.html"]{display:inline-block;color:#fff;font:700 18px/1.7 system-ui;text-decoration:underline;text-underline-offset:5px;text-shadow:0 1px 4px #102018;padding:8px 14px;border-radius:12px;background:rgba(19,41,30,.48)}
