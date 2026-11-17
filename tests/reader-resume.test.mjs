@@ -29,3 +29,12 @@ test('existing ayah 68 selection migrates to its actual page instead of stale pa
  assert.equal(r('reviewPage'),10);assert.equal(r('resumeAyah'),68);assert.equal(r('state.pos'),0);
  const reopened=reader(storage);reopened('restorePage()');assert.equal(reopened('reviewPage'),10);
 });
+test('completion remains usable on restored page and confirms the selected ayah',()=>{
+ const storage=new Map([['ward-v1',JSON.stringify({pos:0,wardEnd:68})]]);const r=reader(storage);
+ r('verses='+JSON.stringify(JSON.parse(readFileSync('public/quran.json','utf8')).data.ayahs)+';restorePage()');
+ assert.equal(r('completionAyah()'),68);r('$("complete").onclick()');assert.equal(r('state.pos'),68);
+ r('reviewPage=2');assert.ok(r('completionAyah()')<r('state.pos'));r('$("complete").onclick()');assert.equal(r('state.pos'),68);
+});
+test('reader has one completion control and no duplicate manual bookmark form',()=>{
+ const html=readFileSync('public/reader.html','utf8');assert.equal(html.includes('id="savePosition"'),false);assert.equal(html.includes('id="position"'),false);assert.equal((html.match(/id="complete"/g)||[]).length,1);
+});

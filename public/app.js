@@ -84,6 +84,13 @@ function jumpToPage(page) {
   render();
   document.getElementById('page-' + page)?.scrollIntoView({block:'start'});
 }
+function completionAyah() {
+  if(reviewPage===null)return target;
+  const pageAyahs=verses.filter(v=>v.page===reviewPage);
+  if(!pageAyahs.length)return state.pos;
+  const selected=verses[state.wardEnd-1];
+  return selected?.page===reviewPage ? state.wardEnd : pageAyahs.at(-1).numberInSurah;
+}
 function pageNavigation(page) {
   const nav = document.createElement('nav');
   nav.className = 'row page-navigation';
@@ -104,7 +111,7 @@ $('resumeWard').onclick = () => {
   (state.pos === 286 ? $('done') : $('reader')).scrollIntoView({block:'start'});
 };
 $('reviewFinished').onclick = () => jumpToPage(49);
-function render(){if(!verses.length)return;rollover();target=wardTarget();refreshEndChoices();$('progress').value=state.pos;$('pct').textContent=arab(Math.round(state.pos/286*100))+'٪';$('count').textContent='قرأت '+arab(state.pos)+' آية';$('position').value=state.pos;$('reader').style.display=state.pos===286 && reviewPage===null?'none':'block';$('done').style.display=state.pos===286?'block':'none';$('complete').disabled=state.pos===286 || reviewPage!==null;$('resumeWard').hidden=reviewPage===null;$('undo').disabled=previous===null;$('range').textContent='الآيات '+arab(state.pos+1)+' — '+arab(target);$('basmala').hidden=true;$('verses').replaceChildren();if(state.pos<286 || reviewPage!==null){const pages=reviewPage===null ? [...new Set(verses.slice(state.pos,target).map(v=>v.page))] : [reviewPage];pages.forEach((page,i)=>{const figure=document.createElement('figure');figure.style.margin='18px 0';figure.id='page-'+page;const caption=document.createElement('figcaption');caption.className='small';const pageVerses = verses.filter(v => v.page === page);
+function render(){if(!verses.length)return;rollover();target=wardTarget();refreshEndChoices();$('progress').value=state.pos;$('pct').textContent=arab(Math.round(state.pos/286*100))+'٪';$('count').textContent='قرأت '+arab(state.pos)+' آية';$('reader').style.display=state.pos===286 && reviewPage===null?'none':'block';$('done').style.display=state.pos===286?'block':'none';$('complete').disabled=completionAyah()<=state.pos;$('complete').innerHTML='<span class="fur-action fa-save" aria-hidden="true"></span>أتممت القراءة إلى الآية '+arab(completionAyah());$('resumeWard').hidden=reviewPage===null;$('undo').disabled=previous===null;$('range').textContent='الآيات '+arab(state.pos+1)+' — '+arab(target);$('basmala').hidden=true;$('verses').replaceChildren();if(state.pos<286 || reviewPage!==null){const pages=reviewPage===null ? [...new Set(verses.slice(state.pos,target).map(v=>v.page))] : [reviewPage];pages.forEach((page,i)=>{const figure=document.createElement('figure');figure.style.margin='18px 0';figure.id='page-'+page;const caption=document.createElement('figcaption');caption.className='small';const pageVerses = verses.filter(v => v.page === page);
 caption.textContent = 'صفحة ' + arab(page) + ' · الجزء ' + arab(pageVerses[0].juz) + ' من مصحف المدينة';
 const lines = document.createElement('p');
 lines.className = 'mushaf-text';
@@ -144,8 +151,7 @@ for (const verse of pageVerses) {
   lines.append(ayah, ' ');
 }
 figure.append(caption,pageNavigation(page),lines,pageNavigation(page));$('verses').append(figure)});$('range').textContent='من الآية '+arab(state.pos+1)+' إلى الآية '+arab(target)+' — الصفحات '+arab(pages[0])+' إلى '+arab(pages[pages.length-1]);}if(reviewPage!==null)$('range').textContent='مراجعة الصفحة '+arab(reviewPage)+' · موضع قراءتك محفوظ';}
-$('complete').onclick=()=>{saveStop(target)};$('undo').onclick=()=>{if(previous!==null){state.pos=previous;reviewPage=null;previous=null;persist();render()}};
-$('savePosition').onclick=()=>{let v=Number($('position').value);if(!Number.isInteger(v)||v<0||v>286){$('notice').textContent='يرجى اختيار رقم آية بين ٠ و٢٨٦.';return}forgetPage();previous=state.pos;state.pos=v;reviewPage=null;persist();render();$('notice').textContent='تم حفظ موضع القراءة.'};
+$('complete').onclick=()=>{const end=completionAyah();if(end>state.pos)saveStop(end)};$('undo').onclick=()=>{if(previous!==null){state.pos=previous;reviewPage=null;previous=null;persist();render()}};
 $('newDay').onclick=()=>{if(confirm('هل تريد بدء قراءة جديدة من أول السورة؟')){forgetPage();previous=state.pos;reviewPage=null;state.pos=0;state.wardEnd=null;state.date=today();$('notice').textContent='';persist();render()}};
 for(const [id,delta] of [['smaller',-2],['larger',2]])$(id).onclick=()=>{state.font=Math.max(22,Math.min(46,state.font+delta));persist();render()};
 fetch('./quran.json').then(r=>{if(!r.ok)throw Error();return r.json()}).then(j=>{verses=j.data.ayahs;if(verses.length!==286||verses.some((v,i)=>v.numberInSurah!==i+1||!v.text))throw Error();rollover();restorePage();render();if(state.pos>0||reviewPage!==null)requestAnimationFrame(scrollToReading)}).catch(()=>{$('notice').textContent='تعذّر تحميل النص. يرجى إعادة فتح الصفحة عند توفر الاتصال.';$('complete').disabled=true});
