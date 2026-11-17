@@ -3,9 +3,31 @@ let state={date:today(),pos:0,sessions:8,start:'07:00',end:'21:00',font:30},vers
 try{const s=JSON.parse(localStorage.getItem('ward-v1')||'null');if(s)state={...state,...s};state.pos=Math.min(286,Math.max(0,Number(state.pos)||0));}catch(e){$('notice').textContent='تعذّر قراءة الحفظ السابق. يمكنك القراءة وتحديد موضعك يدويًا.'}
 if(!Array.isArray(state.times)||!state.times.length){state.times=['05:45','09:00','13:00'];}state.sessions=state.times.length;
 function persist(){try{localStorage.setItem('ward-v1',JSON.stringify(state))}catch(e){$('notice').textContent='الحفظ غير متاح في هذا المتصفح؛ اترك الصفحة مفتوحة أو دوّن رقم الآية.'}}
-function rollover(){if(state.date!==today()){if(state.pos===286||state.pos===0){state.pos=0;state.date=today();persist()}else $('notice').textContent='هذا موضعك من قراءة سابقة. يمكن المتابعة منه، أو اختيار «بدء قراءة جديدة» من الإعدادات.'}}
+function rollover(){if(state.date!==today()){if(state.pos===0){state.date=today();persist()}else $('notice').textContent='هذا موضعك من قراءة سابقة. يمكن المتابعة منه، أو اختيار «بدء قراءة جديدة» من الإعدادات.'}}
 function getTarget(){if(state.pos>=286)return 286;const firstPage=verses[state.pos].page,lastPage=Math.min(49,firstPage+Math.ceil(48/state.sessions)-1);return verses.filter(v=>v.page<=lastPage).length}
 let reviewPage = null;
+const locationKey = 'ward-reader-location';
+function rememberPage(page) {
+  try { localStorage.setItem(locationKey, JSON.stringify({page, pos:state.pos})); } catch {}
+}
+function forgetPage() { try { localStorage.removeItem(locationKey); } catch {} }
+function restorePage() {
+  try {
+    const saved=JSON.parse(localStorage.getItem(locationKey)||'null');
+    if(saved && saved.pos===state.pos && Number.isInteger(saved.page) && saved.page>=2 && saved.page<=49) reviewPage=saved.page;
+  } catch {}
+}
+let pageFrame;
+function trackVisiblePage() {
+  cancelAnimationFrame(pageFrame);
+  pageFrame=requestAnimationFrame(()=>{
+    if(document.querySelector('dialog[open]'))return;
+    const pages=[...document.querySelectorAll('#verses > figure')];
+    const visible=pages.find(el=>{const r=el.getBoundingClientRect();return r.bottom>innerHeight*.25 && r.top<innerHeight*.75});
+    if(visible)rememberPage(Number(visible.id.slice(5)));
+  });
+}
+window.addEventListener('scroll',trackVisiblePage,{passive:true});
 function wardTarget() {
   return Number.isInteger(state.wardEnd) && state.wardEnd > state.pos && state.wardEnd <= 286
     ? state.wardEnd : getTarget();
@@ -28,6 +50,7 @@ $('wardEnd').onchange = () => {
   render();
 };
 function saveStop(n) {
+  forgetPage();
   previous = state.pos;
   state.date = today();
   state.pos = n;
@@ -38,6 +61,7 @@ function saveStop(n) {
   (n === 286 ? $('done') : $('reader')).scrollIntoView({block:'start'});
 }
 function jumpToPage(page) {
+  rememberPage(page);
   const current = document.getElementById('page-' + page);
   if (current) { current.scrollIntoView({block:'start'}); return; }
   reviewPage = page;
@@ -58,6 +82,7 @@ function pageNavigation(page) {
   return nav;
 }
 $('resumeWard').onclick = () => {
+  forgetPage();
   reviewPage = null;
   render();
   (state.pos === 286 ? $('done') : $('reader')).scrollIntoView({block:'start'});
@@ -104,10 +129,10 @@ for (const verse of pageVerses) {
 }
 figure.append(caption,pageNavigation(page),lines,pageNavigation(page));$('verses').append(figure)});$('range').textContent='من الآية '+arab(state.pos+1)+' إلى الآية '+arab(target)+' — الصفحات '+arab(pages[0])+' إلى '+arab(pages[pages.length-1]);}if(reviewPage!==null)$('range').textContent='مراجعة الصفحة '+arab(reviewPage)+' · موضع قراءتك محفوظ';}
 $('complete').onclick=()=>{saveStop(target)};$('undo').onclick=()=>{if(previous!==null){state.pos=previous;reviewPage=null;previous=null;persist();render()}};
-$('savePosition').onclick=()=>{let v=Number($('position').value);if(!Number.isInteger(v)||v<0||v>286){$('notice').textContent='يرجى اختيار رقم آية بين ٠ و٢٨٦.';return}previous=state.pos;state.pos=v;reviewPage=null;persist();render();$('notice').textContent='تم حفظ موضع القراءة.'};
-$('newDay').onclick=()=>{if(confirm('هل تريد بدء قراءة جديدة من أول السورة؟')){previous=state.pos;reviewPage=null;state.pos=0;state.wardEnd=null;state.date=today();$('notice').textContent='';persist();render()}};
+$('savePosition').onclick=()=>{let v=Number($('position').value);if(!Number.isInteger(v)||v<0||v>286){$('notice').textContent='يرجى اختيار رقم آية بين ٠ و٢٨٦.';return}forgetPage();previous=state.pos;state.pos=v;reviewPage=null;persist();render();$('notice').textContent='تم حفظ موضع القراءة.'};
+$('newDay').onclick=()=>{if(confirm('هل تريد بدء قراءة جديدة من أول السورة؟')){forgetPage();previous=state.pos;reviewPage=null;state.pos=0;state.wardEnd=null;state.date=today();$('notice').textContent='';persist();render()}};
 for(const [id,delta] of [['smaller',-2],['larger',2]])$(id).onclick=()=>{state.font=Math.max(22,Math.min(46,state.font+delta));persist();render()};
-fetch('./quran.json').then(r=>{if(!r.ok)throw Error();return r.json()}).then(j=>{verses=j.data.ayahs;if(verses.length!==286||verses.some((v,i)=>v.numberInSurah!==i+1||!v.text))throw Error();render()}).catch(()=>{$('notice').textContent='تعذّر تحميل النص. يرجى إعادة فتح الصفحة عند توفر الاتصال.';$('complete').disabled=true});
+fetch('./quran.json').then(r=>{if(!r.ok)throw Error();return r.json()}).then(j=>{verses=j.data.ayahs;if(verses.length!==286||verses.some((v,i)=>v.numberInSurah!==i+1||!v.text))throw Error();rollover();restorePage();render();if(state.pos>0||reviewPage!==null)requestAnimationFrame(()=>document.querySelector('#verses > figure')?.scrollIntoView({block:'start'}))}).catch(()=>{$('notice').textContent='تعذّر تحميل النص. يرجى إعادة فتح الصفحة عند توفر الاتصال.';$('complete').disabled=true});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});
 
 let deferredInstall=null;
