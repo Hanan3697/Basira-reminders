@@ -23,3 +23,9 @@ test('confirmed stop replaces stale page, and a new reading clears remembered lo
 test('next day does not erase a completed reading without explicit restart',()=>{
  const storage=new Map([['ward-v1',JSON.stringify({pos:286,date:'2000-01-01'})]]);const r=reader(storage);r('rollover()');assert.equal(r('state.pos'),286);
 });
+test('existing ayah 68 selection migrates to its actual page instead of stale page 2',()=>{
+ const storage=new Map([['ward-v1',JSON.stringify({pos:0,wardEnd:68})],['ward-reader-location',JSON.stringify({pos:0,page:2})]]);
+ const r=reader(storage);r('verses='+JSON.stringify(JSON.parse(readFileSync('public/quran.json','utf8')).data.ayahs)+';restorePage()');
+ assert.equal(r('reviewPage'),10);assert.equal(r('resumeAyah'),68);assert.equal(r('state.pos'),0);
+ const reopened=reader(storage);reopened('restorePage()');assert.equal(reopened('reviewPage'),10);
+});

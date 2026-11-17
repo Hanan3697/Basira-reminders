@@ -7,15 +7,25 @@ function rollover(){if(state.date!==today()){if(state.pos===0){state.date=today(
 function getTarget(){if(state.pos>=286)return 286;const firstPage=verses[state.pos].page,lastPage=Math.min(49,firstPage+Math.ceil(48/state.sessions)-1);return verses.filter(v=>v.page<=lastPage).length}
 let reviewPage = null;
 const locationKey = 'ward-reader-location';
-function rememberPage(page) {
-  try { localStorage.setItem(locationKey, JSON.stringify({page, pos:state.pos})); } catch {}
+let resumeAyah = null;
+function rememberPage(page, ayah = null) {
+  try { localStorage.setItem(locationKey, JSON.stringify({version:2, page, ayah, pos:state.pos})); } catch {}
 }
 function forgetPage() { try { localStorage.removeItem(locationKey); } catch {} }
 function restorePage() {
   try {
     const saved=JSON.parse(localStorage.getItem(locationKey)||'null');
-    if(saved && saved.pos===state.pos && Number.isInteger(saved.page) && saved.page>=2 && saved.page<=49) reviewPage=saved.page;
+    if(saved?.version===2 && saved.pos===state.pos && Number.isInteger(saved.page) && saved.page>=2 && saved.page<=49) {
+      reviewPage=saved.page;resumeAyah=saved.ayah;
+    } else if(Number.isInteger(state.wardEnd) && state.wardEnd>state.pos && verses[state.wardEnd-1]) {
+      resumeAyah=state.wardEnd;reviewPage=verses[resumeAyah-1].page;
+      rememberPage(reviewPage,resumeAyah);
+    }
   } catch {}
+}
+function scrollToReading() {
+  const ayah=resumeAyah && document.querySelector('#verses [data-ayah="'+resumeAyah+'"]');
+  (ayah || document.querySelector('#verses > figure'))?.scrollIntoView({block:'start'});
 }
 let pageFrame;
 function trackVisiblePage() {
@@ -42,12 +52,18 @@ function refreshEndChoices() {
     select.dataset.from = String(state.pos);
   }
   select.value = state.wardEnd === target && state.pos < target ? String(target) : '';
-  $('wardEndControl').hidden = reviewPage !== null || state.pos === 286;
+  $('wardEndControl').hidden = state.pos === 286;
 }
 $('wardEnd').onchange = () => {
   state.wardEnd = Number($('wardEnd').value) || null;
+  if(state.wardEnd && verses[state.wardEnd-1]) {
+    resumeAyah=state.wardEnd;
+    reviewPage=verses[resumeAyah-1].page;
+    rememberPage(reviewPage,resumeAyah);
+  } else {forgetPage();resumeAyah=null;reviewPage=null;}
   persist();
   render();
+  requestAnimationFrame(scrollToReading);
 };
 function saveStop(n) {
   forgetPage();
@@ -132,7 +148,7 @@ $('complete').onclick=()=>{saveStop(target)};$('undo').onclick=()=>{if(previous!
 $('savePosition').onclick=()=>{let v=Number($('position').value);if(!Number.isInteger(v)||v<0||v>286){$('notice').textContent='يرجى اختيار رقم آية بين ٠ و٢٨٦.';return}forgetPage();previous=state.pos;state.pos=v;reviewPage=null;persist();render();$('notice').textContent='تم حفظ موضع القراءة.'};
 $('newDay').onclick=()=>{if(confirm('هل تريد بدء قراءة جديدة من أول السورة؟')){forgetPage();previous=state.pos;reviewPage=null;state.pos=0;state.wardEnd=null;state.date=today();$('notice').textContent='';persist();render()}};
 for(const [id,delta] of [['smaller',-2],['larger',2]])$(id).onclick=()=>{state.font=Math.max(22,Math.min(46,state.font+delta));persist();render()};
-fetch('./quran.json').then(r=>{if(!r.ok)throw Error();return r.json()}).then(j=>{verses=j.data.ayahs;if(verses.length!==286||verses.some((v,i)=>v.numberInSurah!==i+1||!v.text))throw Error();rollover();restorePage();render();if(state.pos>0||reviewPage!==null)requestAnimationFrame(()=>document.querySelector('#verses > figure')?.scrollIntoView({block:'start'}))}).catch(()=>{$('notice').textContent='تعذّر تحميل النص. يرجى إعادة فتح الصفحة عند توفر الاتصال.';$('complete').disabled=true});
+fetch('./quran.json').then(r=>{if(!r.ok)throw Error();return r.json()}).then(j=>{verses=j.data.ayahs;if(verses.length!==286||verses.some((v,i)=>v.numberInSurah!==i+1||!v.text))throw Error();rollover();restorePage();render();if(state.pos>0||reviewPage!==null)requestAnimationFrame(scrollToReading)}).catch(()=>{$('notice').textContent='تعذّر تحميل النص. يرجى إعادة فتح الصفحة عند توفر الاتصال.';$('complete').disabled=true});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});
 
 let deferredInstall=null;
