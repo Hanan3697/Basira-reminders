@@ -159,7 +159,7 @@
 
 @font-face {
   font-family: 'Ward Mushaf';
-  src: url('/AmiriQuran.ttf') format('truetype');
+  src: url('/BasiraQuran.ttf') format('truetype');
   font-display: swap;
 }
 .reader-scene .mushaf-text {
@@ -354,3 +354,13 @@
 .home .site-links a,.home .site-links a[href="/sources.html"],.nature a[href="/sources.html"],.nature a[href="/privacy.html"]{font:600 14px/1.7 system-ui;color:#fff;background:transparent;padding:4px;text-decoration:underline;text-underline-offset:4px;border-radius:0}
 .reading-settings h1{font-size:clamp(24px,6vw,30px)}
 .reading-settings #reminderSettings{margin-top:0}
+
+/* Use the same Quran-aware shaping in every verse view. Source characters are untouched. */
+.quran,.reader-scene .mushaf-text,.message-verse,.law-verse,.dua blockquote,.verse-study .study-ayah {
+ font-family:'Ward Mushaf',serif;
+ letter-spacing:normal;
+ word-spacing:normal;
+ word-break:normal;
+ overflow-wrap:normal;
+ direction:rtl;
+}

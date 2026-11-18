@@ -1,0 +1,6 @@
+Basira Quran is a modified version of Amiri Quran, by Khaled Hosny.
+Licensed under the SIL Open Font License 1.1; see Amiri-OFL.txt.
+Original: https://github.com/aliftype/amiri
+Modification: adds word ligatures for connected internal small yeh in the existing Uthmani text.
+Quran source text, vowel marks and DOM characters are not changed.
+Build: python scripts/build-quran-font.py (fonttools and uharfbuzz).
