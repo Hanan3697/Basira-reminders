@@ -67,7 +67,7 @@
       const sub=await subscribe(),level=dhikr.value;
       await api('/settings',{category:'dhikr',level,endpoint:sub.endpoint,keys:sub.toJSON().keys});
       localStorage.setItem('ward-dhikr-frequency',level);
-      dhikrStatus.textContent='تم الحفظ: '+({few:3,medium:6,many:10}[level])+' إشعارات أذكار يوميًا تلقائيًا، بين ٨ صباحًا و٩ مساءً بتوقيت عُمان. تصل عند توفر الإنترنت حتى والتطبيق مغلق.';
+      dhikrStatus.textContent='تم الحفظ: '+({few:7,medium:11,many:17}[level])+' إشعارات أذكار يوميًا تلقائيًا، بين ٨ صباحًا و٩ مساءً بتوقيت عُمان. تصل عند توفر الإنترنت حتى والتطبيق مغلق.';
     }catch{dhikrStatus.textContent='تعذّر حفظ إشعارات الأذكار. تحقّقي من الاتصال وإذن الإشعارات ثم أعيدي المحاولة.'}
     finally{renderStatus()}
   };

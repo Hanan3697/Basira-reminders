@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import {webcrypto} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
-import {dhikrTimes} from '../worker/dhikr.mjs';
+import {dhikrTimes,dhikrMessage,MORNING,EVENING,DHIKR} from '../worker/dhikr.mjs';
 import {encryptPush,decode} from '../worker/web-push.mjs';
 import {ReadingPush} from '../worker/push.mjs';
 if(!globalThis.crypto)globalThis.crypto=webcrypto;
 const b64=x=>Buffer.from(x).toString('base64url');
 test('automatic schedules stay in daytime, distinct and match each selected count',()=>{
- for(const [level,count] of Object.entries({few:3,medium:6,many:10})){const times=dhikrTimes(level);assert.equal(times.length,count);assert.equal(new Set(times).size,count);for(const t of times)assert.ok(t>='08:00'&&t<'21:00')}
+ for(const [level,count] of Object.entries({few:7,medium:11,many:17})){const times=dhikrTimes(level);assert.equal(times.length,count);assert.equal(new Set(times).size,count);for(const t of times)assert.ok(t>='08:00'&&t<'21:00')}
  assert.deepEqual(dhikrTimes('off'),[]);
 });
 test('encryption matches the independent RFC 8291 known-answer example',async()=>{
@@ -45,4 +45,15 @@ test('service worker displays dhikr text and opens home, while legacy empty push
  let pending;handlers.push({data:{json:()=>({kind:'dhikr',body:'الحمد لله'})},waitUntil:p=>pending=p});await pending;assert.equal(shown[0].body,'الحمد لله');assert.equal(shown[0].data.url,'/');
  handlers.notificationclick({notification:{...shown[0],close(){}},waitUntil:p=>pending=p});await pending;assert.equal(opened[0],'https://basira.test/');
  handlers.push({waitUntil:p=>pending=p});await pending;assert.equal(shown[1].tag,'ward-reading');
+});
+
+test('each frequency opens with morning and evening text and has no duplicate text that day',()=>{
+ for(let day=0;day<20;day++)for(const level of ['few','medium','many']){
+  const times=dhikrTimes(level),messages=times.map(t=>dhikrMessage(Date.parse('2026-11-18T'+t+':00+04:00')+day*86400000,level).body);
+  assert.equal(times[0],'08:00');assert.equal(messages[0],MORNING);
+  assert.equal(messages[times.indexOf('18:00')],EVENING);
+  assert.equal(new Set(messages).size,times.length);
+  times.forEach((t,i)=>{if(t<'18:00')assert.notEqual(messages[i],EVENING);if(t>'08:00')assert.notEqual(messages[i],MORNING)});
+ }
+ assert.equal(new Set(DHIKR).size,DHIKR.length);
 });
