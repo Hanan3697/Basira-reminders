@@ -37,19 +37,26 @@ self.addEventListener('message',event=>{
  })());
 });
 const reader = new URL('/reader.html',self.location.origin).href;
-function notify() {
+function notify(event) {
+  let message;try{message=event.data?.json()}catch{}
+  if(message?.kind==='dhikr')return self.registration.showNotification('ذكر الله · بصيرة',{
+    body:typeof message.body==='string'?message.body.slice(0,500):'سبحان الله وبحمده',
+    icon:'/icon-192.png',tag:'basira-dhikr',data:{url:'/'}
+  });
   return self.registration.showNotification('وقت قراءة سورة البقرة',{
     body:'حان وقت متابعة القراءة من موضعك المحفوظ.',
     icon:'/icon-192.png',tag:'ward-reading'
   });
 }
-self.addEventListener('push',event=>event.waitUntil(notify()));
+self.addEventListener('push',event=>event.waitUntil(notify(event)));
 self.addEventListener('notificationclick',event=>{
   event.notification.close();
   event.waitUntil((async()=>{
+    const path=event.notification.data?.url==='/'?'/':'/reader.html';
+    const target=new URL(path,self.location.origin).href;
     const clients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-    const existing=clients.find(client=>new URL(client.url).pathname==='/reader.html');
+    const existing=clients.find(client=>new URL(client.url).pathname===path);
     if(existing)return existing.focus();
-    return self.clients.openWindow(reader);
+    return self.clients.openWindow(target);
   })());
 });

@@ -1,3 +1,5 @@
+import {dhikrTimes,dhikrMessage,DHIKR_COUNTS} from './dhikr.mjs';
+import {encryptPush,validPushKeys} from './web-push.mjs';
 // One private Durable Object per device: its key, subscription and next alarm.
 const encoder=new TextEncoder();
 export const base64url=bytes=>btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
@@ -30,7 +32,7 @@ export class ReadingPush {
   const route=new URL(request.url).pathname.split('/').pop();
   const json=(value,status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
   if(route==='key')return json({key:(await this.keys()).publicKey});
-  if(route==='status'){const sub=await this.storage.get('subscription');return json({transportVersion:2,active:!!sub,next:sub?.due,lastDelivery:await this.storage.get('lastDelivery')})}
+  if(route==='status'){const sub=await this.storage.get('subscription');return json({transportVersion:3,active:!!sub,next:sub?.due,lastDelivery:await this.storage.get('lastDelivery')})}
   if(route==='disable'){await this.storage.delete('subscription');await this.storage.deleteAlarm();return json({ok:true})}
   const data=await request.json().catch(()=>null);
   if(route==='test'){
@@ -38,29 +40,52 @@ export class ReadingPush {
    const last=await this.storage.get('lastTest')||0;if(Date.now()-last<60000)return json({error:'wait_one_minute'},429);
    const attempt=await this.storage.get('lastAttempt')||0;if(Date.now()-attempt<5000)return json({error:'wait_five_seconds'},429);
    await this.storage.put('lastAttempt',Date.now());
-   const status=await this.send(sub.endpoint);
+   const status=await this.send(sub.endpoint,data?.kind==='dhikr'?dhikrMessage(Date.now()):null,sub.keys);
    if(status===404||status===410){await this.storage.delete('subscription');await this.storage.deleteAlarm()}
    const ok=status>=200&&status<300;if(ok)await this.storage.put('lastTest',Date.now());
    const delivery=await this.storage.get('lastDelivery');
    return json({ok,error:ok?undefined:'push_rejected',delivery},ok?200:502);
   }
-  if(!data||!validEndpoint(data.endpoint)||!validTimes(data.times))return json({error:'invalid_subscription'},400);
   const existing=await this.storage.get('subscription');
+  // Legacy clients still update reading times; a scoped update preserves the other category.
+  if(route==='settings'){
+   if(!data||!['reading','dhikr'].includes(data.category))return json({error:'invalid_settings'},400);
+   if(data.category==='dhikr'&&!['off',...Object.keys(DHIKR_COUNTS)].includes(data.level))return json({error:'invalid_frequency'},400);
+   if(data.category==='reading'&&typeof data.enabled!=='boolean')return json({error:'invalid_settings'},400);
+  }
+  const stopping=route==='settings'&&(data.category==='reading'?!data.enabled:data.level==='off');
+  if(!existing&&stopping)return json({ok:true,active:false});
+  if(!data||!validEndpoint(data.endpoint)||(!stopping&&route!=='settings'&&!validTimes(data.times)))return json({error:'invalid_subscription'},400);
   if(route==='update'&&(!existing||existing.endpoint!==data.endpoint))return json({error:'not_subscribed'},409);
-  const times=[...new Set(data.times)].sort(),due=nextReading(times);
+  if(data.keys&&!await validPushKeys(data.keys))return json({error:'invalid_keys'},400);
+  const sub={...existing,endpoint:data.endpoint,keys:data.keys||existing?.keys,attempts:0};
+  sub.times=sub.times||[];sub.dhikr=sub.dhikr||'off';
+  if(route==='settings'&&data.category==='dhikr'){
+   if(!stopping&&!sub.keys)return json({error:'keys_required'},400);
+   sub.dhikr=data.level;
+  }else if(route==='settings'&&stopping)sub.times=[];
+  else {if(!validTimes(data.times))return json({error:'invalid_times'},400);sub.times=[...new Set(data.times)].sort()}
   await this.keys();
-  await this.storage.put('subscription',{endpoint:data.endpoint,times,due,attempts:0});
-  await this.storage.setAlarm(due);return json({ok:true,next:due,timeZone:'Asia/Muscat'});
+  if(!sub.times.length&&sub.dhikr==='off'){await this.storage.delete('subscription');await this.storage.deleteAlarm();return json({ok:true,active:false})}
+  const next=this.next(sub);sub.due=next.due;sub.kind=next.kind;
+  await this.storage.put('subscription',sub);
+  await this.storage.setAlarm(sub.due);return json({ok:true,active:true,next:sub.due,timeZone:'Asia/Muscat'});
  }
- async send(endpoint){
+ next(sub,now=Date.now()){
+  const reading=sub.times?.length?nextReading(sub.times,now):Infinity;
+  const times=dhikrTimes(sub.dhikr),dhikr=times.length?nextReading(times,now):Infinity;
+  return reading===dhikr?{due:reading,kind:'both'}:reading<dhikr?{due:reading,kind:'reading'}:{due:dhikr,kind:'dhikr'};
+ }
+
+ async send(endpoint,message=null,keys){
   let stage='signing';
   try{
    const origin=new URL(endpoint).origin,now=Date.now();
    let cached=await this.storage.get('authorization');
    if(!cached||cached.origin!==origin||cached.until<now){cached={origin,until:now+3500000,value:await pushAuthorization(endpoint,await this.keys())};await this.storage.put('authorization',cached)}
+   const body=message?await encryptPush(keys,JSON.stringify(message)):new Uint8Array(0);
    stage='network';
-   // Explicit zero-byte body gives APNs an unambiguous Content-Length: 0.
-   const result=await fetch(endpoint,{method:'POST',redirect:'manual',headers:{Authorization:cached.value,TTL:'600',Urgency:'high','Content-Type':'application/octet-stream'},body:new Uint8Array(0),signal:AbortSignal.timeout(15000)});
+   const result=await fetch(endpoint,{method:'POST',redirect:'manual',headers:{Authorization:cached.value,TTL:'600',Urgency:'high','Content-Type':'application/octet-stream',...(message?{'Content-Encoding':'aes128gcm'}:{})},body,signal:AbortSignal.timeout(15000)});
    let reason='';if(!result.ok){const data=await result.json().catch(()=>null);if(typeof data?.reason==='string'&&/^[A-Za-z0-9_]{1,64}$/.test(data.reason))reason=data.reason}else await result.body?.cancel();
    await this.storage.put('lastDelivery',{status:result.status,reason,time:Date.now()});return result.status;
   }catch(error){await this.storage.put('lastDelivery',{status:503,reason:stage==='signing'?'SigningFailed':error.name==='TimeoutError'?'SendTimeout':'NetworkFailure',detail:String(error.message||error.name).replace(/https?:\/\/[^\s]+/g,'[URL]').replace(/[A-Za-z0-9_-]{32,}/g,'[redacted]').slice(0,160),time:Date.now()});return 503}
@@ -70,19 +95,22 @@ export class ReadingPush {
   const sub=await this.storage.get('subscription');if(!sub)return;
   const now=Date.now();if(now<sub.due){await this.storage.setAlarm(sub.due);return}
   let status=0;
-  if(now-sub.due<600000)status=await this.send(sub.endpoint);
+  if(now-sub.due<600000){
+   status=await this.send(sub.endpoint,sub.kind==='dhikr'?dhikrMessage(sub.due,sub.dhikr):null,sub.keys);
+   if(sub.kind==='both'&&status>=200&&status<300)status=await this.send(sub.endpoint,dhikrMessage(sub.due,sub.dhikr),sub.keys);
+  }
   if(status===404||status===410){await this.storage.delete('subscription');await this.storage.deleteAlarm();return}
   if((status===429||status>=500)&&sub.attempts<2&&Date.now()-sub.due<480000){
    sub.attempts++;await this.storage.put('subscription',sub);await this.storage.setAlarm(Date.now()+60000);return;
   }
-  sub.due=nextReading(sub.times,Date.now());sub.attempts=0;
+  const next=this.next(sub,Date.now());sub.due=next.due;sub.kind=next.kind;sub.attempts=0;
   await this.storage.put('subscription',sub);await this.storage.setAlarm(sub.due);
  })}
 }
 export async function pushRoute(request,env){
  const url=new URL(request.url),route=url.pathname.slice('/api/push/'.length);
  const response=(error,status)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
- if(!['key','enable','update','disable','test','status'].includes(route))return response('not_found',404);
+ if(!['key','enable','update','disable','test','status','settings'].includes(route))return response('not_found',404);
  if(request.method!=='POST')return response('method_not_allowed',405);
  if(request.headers.get('origin')!==url.origin)return response('forbidden',403);
  const token=request.headers.get('authorization')?.match(/^Bearer ([a-f0-9]{64})$/)?.[1];

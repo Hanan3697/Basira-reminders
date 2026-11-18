@@ -7,6 +7,9 @@
   const available=supported&&(!ios||installed);
   const saved=()=>localStorage.getItem('ward-reminder-mode');
   const times=()=>JSON.parse(localStorage.getItem('ward-v1')||'{}').times||state.times;
+  const dhikr=$('dhikrFrequency'), dhikrSave=$('saveDhikr'), dhikrStop=$('stopDhikr'), dhikrTest=$('testDhikr'), dhikrStatus=$('dhikrStatus');
+  const dhikrSaved=()=>localStorage.getItem('ward-dhikr-frequency')||'off';
+  dhikr.value=dhikrSaved()==='off'?'medium':dhikrSaved();
   let registration;
   async function worker(){
     if(!registration){
@@ -16,6 +19,9 @@
     return registration;
   }
   function renderStatus(message) {
+    dhikrSave.disabled=!available||!background;dhikrStop.disabled=dhikrSaved()==='off';dhikrTest.disabled=!available||dhikrSaved()==='off';
+    if(!available)dhikrStatus.textContent=ios&&!installed?'افتحي بصيرة من أيقونته على الشاشة الرئيسية لتفعيل الإشعارات.':'الإشعارات غير متاحة في هذا المتصفح.';
+    else if(!dhikrStatus.textContent)dhikrStatus.textContent=dhikrSaved()==='off'?'إشعارات الأذكار متوقفة. اختاري الكمية واضغطي تفعيل.':'إشعارات الأذكار مفعّلة على هذا الجهاز.';
     const active=available && Notification.permission==='granted' && saved();
     enable.disabled=!available;
     test.disabled=!active;
@@ -39,20 +45,42 @@
   async function sync(){
     const reg=await worker(),sub=await reg.pushManager.getSubscription();
     if(!sub)throw Error('subscription');
-    await api('/update',{endpoint:sub.endpoint,times:times()});
+    await api('/update',{endpoint:sub.endpoint,keys:sub.toJSON().keys,times:times()});
   }
+  async function subscribe(){
+    const reg=await worker(),{key}=await api('/key');
+    const bytes=Uint8Array.from(atob(key.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+    let sub=await reg.pushManager.getSubscription();
+    if(sub?.options.applicationServerKey){const old=new Uint8Array(sub.options.applicationServerKey);if(old.length!==bytes.length||old.some((b,i)=>b!==bytes[i])){await sub.unsubscribe();sub=null}}
+    return sub||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:bytes});
+  }
+  async function stopCategory(category){
+    const sub=await (await worker()).pushManager.getSubscription();
+    if(!sub)return;
+    const result=await api('/settings',{category,enabled:false,level:'off',endpoint:sub.endpoint});
+    if(!result.active)await sub.unsubscribe();
+  }
+  dhikrSave.onclick=async()=>{
+    dhikrSave.disabled=true;
+    try{
+      if(Notification.permission!=='granted'&&await Notification.requestPermission()!=='granted'){dhikrStatus.textContent='اسمحي بإشعارات بصيرة من إعدادات جهازك أولًا.';return}
+      const sub=await subscribe(),level=dhikr.value;
+      await api('/settings',{category:'dhikr',level,endpoint:sub.endpoint,keys:sub.toJSON().keys});
+      localStorage.setItem('ward-dhikr-frequency',level);
+      dhikrStatus.textContent='تم الحفظ: '+({few:3,medium:6,many:10}[level])+' إشعارات أذكار يوميًا تلقائيًا، بين ٨ صباحًا و٩ مساءً بتوقيت عُمان. تصل عند توفر الإنترنت حتى والتطبيق مغلق.';
+    }catch{dhikrStatus.textContent='تعذّر حفظ إشعارات الأذكار. تحقّقي من الاتصال وإذن الإشعارات ثم أعيدي المحاولة.'}
+    finally{renderStatus()}
+  };
+  dhikrStop.onclick=async()=>{try{await stopCategory('dhikr');localStorage.removeItem('ward-dhikr-frequency');dhikrStatus.textContent='تم إيقاف إشعارات الأذكار فقط.';renderStatus()}catch{dhikrStatus.textContent='تعذّر الإيقاف. حاولي عند توفر الإنترنت.'}};
+  dhikrTest.onclick=async()=>{dhikrTest.disabled=true;try{await api('/test',{kind:'dhikr'});dhikrStatus.textContent='أُرسل إشعار ذكر للتجربة.'}catch(e){dhikrStatus.textContent=e.message==='wait_one_minute'?'انتظري دقيقة بين إشعارات التجربة.':'تعذّر إرسال التجربة. تحقّقي من الاتصال ثم حاولي مجددًا.'}finally{renderStatus()}};
   const show=async(title)=> (await worker()).showNotification(title,{body:'اضغط لفتح صفحة سورة البقرة.',icon:'/icon-192.png',tag:'ward-reading'});
   enable.onclick=async()=>{
     try{
       if(Notification.permission!=='granted' && await Notification.requestPermission()!=='granted'){renderStatus('لتفعيل التذكير، اسمح بإشعارات بصيرة من إعدادات جهازك.');return;}
       const reg=await worker();
       if(background){
-        const {key}=await api('/key');
-        const bytes=Uint8Array.from(atob(key.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
-        let sub=await reg.pushManager.getSubscription();
-        if(sub?.options.applicationServerKey){const old=new Uint8Array(sub.options.applicationServerKey);if(old.length!==bytes.length||old.some((b,i)=>b!==bytes[i])){await sub.unsubscribe();sub=null}}
-        sub=sub||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:bytes});
-        await api('/enable',{endpoint:sub.endpoint,times:times()});
+        const sub=await subscribe();
+        await api('/enable',{endpoint:sub.endpoint,keys:sub.toJSON().keys,times:times()});
         localStorage.setItem('ward-reminder-mode','push');
       }else{
         await show('تم تفعيل تذكير الصفحة');
@@ -65,10 +93,9 @@
   stop.onclick=async()=>{
     try{
       if(saved()==='push'){
-        await api('/disable');const sub=await (await worker()).pushManager.getSubscription();
-        if(sub)await sub.unsubscribe();
+        await stopCategory('reading');
       }
-      localStorage.removeItem('ward-reminder-mode');renderStatus('تم إيقاف التذكيرات على هذا الجهاز.');
+      localStorage.removeItem('ward-reminder-mode');renderStatus('تم إيقاف تذكيرات القراءة فقط.');
     }catch{renderStatus('تعذّر إيقاف التذكيرات. أعد المحاولة عند الاتصال.');}
   };
   window.addEventListener('ward-times-saved',()=>{if(saved()==='push')sync().catch(()=>renderStatus('حُفظت الأوقات على الجهاز. أعد حفظها عند الاتصال لتحديث مواعيد الإشعارات.'));});
